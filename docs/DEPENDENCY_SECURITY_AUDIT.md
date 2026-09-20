@@ -110,9 +110,9 @@ Previously: 7 reported issues (4 moderate + 3 high in human audit output; adviso
 
 ## Package version / architecture
 
-- npm package version remains **`1.1.0`** (no bump required for dependency overrides).
-- No production source, CLI surface, Action inputs/outputs, or public API changes.
-- Tag `v1.1.0` was not modified. Planned Action release tag `v1.1.1` is out of scope for this audit commit.
+- npm package version is **`1.1.1`** (aligned with git tag `v1.1.1` and Action default).
+- No production source, CLI surface, Action inputs/outputs, or public API behavior changes beyond version metadata and dependency pins.
+- Tag `v1.1.0` was not modified.
 
 ## Post-remediation verification
 

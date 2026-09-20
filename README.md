@@ -272,7 +272,7 @@ Re-run the commands above for live status; do not treat this table as a substitu
 ## Installation
 
 ```bash
-npx @praneeth_54/agentdoctor@1.1.0
+npx @praneeth_54/agentdoctor@1.1.1
 # or
 npm install -g @praneeth_54/agentdoctor
 agentdoctor --help
@@ -315,11 +315,11 @@ For maximum supply-chain pinning, pin a full commit SHA of this repository. Do n
 The `v1.1.0` Action release still defaults to the published AgentDoctor **CLI `1.0.0`** for compatibility. That is intentional.
 
 - Omit `version` (or set `version: "1.0.0"`) → install `@praneeth_54/agentdoctor@1.0.0`
-- Set `version: "1.1.0"` explicitly when you want the newer CLI in CI
+- Set `version: "1.1.1"` explicitly when you want the newer CLI in CI
 - `version: workspace` runs this repo’s built `dist/cli/index.js` (maintainers / local CI after `npm run build`)
 - `latest` / `beta` dist-tags are also accepted
 
-Project Brain and MCP are **not** started by this Action even when `version: "1.1.0"`. The Action still runs Safety scan/verify only.
+Project Brain and MCP are **not** started by this Action even when `version: "1.1.1"`. The Action still runs Safety scan/verify only.
 
 The Action is report-only until you set a policy input (`minimum-score`, `fail-on-severity`, `fail-on-rule`, or `fail-on-new` with `verify-baseline`).
 
@@ -426,7 +426,7 @@ steps:
     uses: pranee54/AgentDoctor@v1.1.0
     with:
       path: .
-      version: "1.1.0"
+      version: "1.1.1"
       output-file: agentdoctor-report.json
       json-output: "true"
       minimum-score: "70"
@@ -508,7 +508,7 @@ The existing `v1.1.0` product tag is the Action metadata consumers should pin to
 
 ## Try it yourself
 
-1. **Install:** `npx @praneeth_54/agentdoctor@1.1.0 --help`
+1. **Install:** `npx @praneeth_54/agentdoctor@1.1.1 --help`
 2. **Run Brain MCP:** `agentdoctor brain-mcp --root /ABSOLUTE/PATH/TO/YOUR/PROJECT`
 3. **Connect MCP:** copy [examples/mcp/cursor.mcp.json](examples/mcp/cursor.mcp.json) (or Claude / Codex siblings) with absolute paths
 4. **First query:** call `brain_overview`

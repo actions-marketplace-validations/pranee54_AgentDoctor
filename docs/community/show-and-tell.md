@@ -10,7 +10,7 @@ AgentDoctor 1.1.0 ships a Project Brain + MCP tools. We learn more from **one ca
 
 ## How to participate
 
-1. Install `@praneeth_54/agentdoctor@1.1.0` ([quickstart](../quickstart.md))
+1. Install `@praneeth_54/agentdoctor@1.1.1` ([quickstart](../quickstart.md))
 2. Run `agentdoctor brain-mcp --root /ABSOLUTE/PATH/TO/YOUR/PROJECT` (after `npm run build` if using a clone’s `dist/cli`)
 3. Connect Cursor / Claude Code / Codex using [examples/mcp/](../../examples/mcp/)
 4. Call `brain_overview`, then one of `brain_risk`, `brain_ownership`, `brain_query`

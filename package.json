@@ -1,6 +1,6 @@
 {
   "name": "@praneeth_54/agentdoctor",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Audit AI coding agent configuration in a repository — local, deterministic, no API key.",
   "type": "module",
   "bin": {

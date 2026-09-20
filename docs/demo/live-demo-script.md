@@ -13,7 +13,7 @@ Show `fixtures/understanding-dependencies-project` **or** a prepared sample repo
 ## 01:00 — AgentDoctor
 
 ```bash
-npx @praneeth_54/agentdoctor@1.1.0 --help
+npx @praneeth_54/agentdoctor@1.1.1 --help
 ```
 
 Optional: one Safety scan line — clarify it is a **separate** product path.

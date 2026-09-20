@@ -26,10 +26,10 @@ Agents can read files; they still struggle with architecture, blast radius, owne
 
 ## Installation
 
-Package: `@praneeth_54/agentdoctor` · CLI: `agentdoctor` · Version: **1.1.0**
+Package: `@praneeth_54/agentdoctor` · CLI: `agentdoctor` · Version: **1.1.1**
 
 ```bash
-npx @praneeth_54/agentdoctor@1.1.0 --help
+npx @praneeth_54/agentdoctor@1.1.1 --help
 # or
 npm install -g @praneeth_54/agentdoctor
 agentdoctor --help

@@ -12,11 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vitest 3 → 4/5 major upgrade remains deferred (dev-only moderate advisory).
 - Do **not** auto-publish from CI agents.
 
-## [1.1.1] — 2026-09-17
+## [1.1.1] — 2026-09-20
 
-Patch release: Marketplace Action naming + dependency security pins. Published npm
-tarball version remains `1.1.0` until a follow-up owner publish; git tag / GitHub
-Release `v1.1.1` tracks this Action + lockfile remediation line.
+Patch release: Marketplace Action naming + dependency security pins. npm, git tag,
+GitHub Release, and Action default are aligned on **`1.1.1`**.
 
 ### Changed
 
@@ -24,6 +23,7 @@ Release `v1.1.1` tracks this Action + lockfile remediation line.
 - npm overrides pin patched transitive versions: `js-yaml@4.3.2`, `fast-uri@3.1.8`,
   `hono@4.13.8`, `qs@6.16.0`.
 - Fixture `fixtures/multi-agent-project` pins `next@15.5.24` (scan fixture only).
+- Action default `version` input and CI smoke pins use `1.1.1`.
 
 ### Security
 
