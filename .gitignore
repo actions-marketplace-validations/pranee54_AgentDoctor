@@ -54,6 +54,18 @@ validation/real-world/history/*
 # Local Project Brain state (generated snapshots under .agentdoctor/project-brain/)
 .agentdoctor/
 
+# Local Cursor IDE / MCP config (machine-absolute paths; never publish)
+.cursor/
+
+# Flutter / Dart generated (fixtures may create these during local scans)
+**/.dart_tool/
+**/local.properties
+fixtures/**/pubspec.lock
+**/GeneratedPluginRegistrant.java
+
+# Local MCP-agent validation run output
+validation/mcp-agent/results.json
+
 # Local-only internal docs / notes (never publish)
 .private/
 AgentDoctorOS/
