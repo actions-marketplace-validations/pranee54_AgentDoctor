@@ -9,8 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 
-- Owner-only after this tree is green: `npm publish`, git tag `v1.1.0`, GitHub Release.
-  Do **not** auto-publish from CI agents.
+- Vitest 3 → 4/5 major upgrade remains deferred (dev-only moderate advisory).
+- Do **not** auto-publish from CI agents.
+
+## [1.1.1] — 2026-09-17
+
+Patch release: Marketplace Action naming + dependency security pins. Published npm
+tarball version remains `1.1.0` until a follow-up owner publish; git tag / GitHub
+Release `v1.1.1` tracks this Action + lockfile remediation line.
+
+### Changed
+
+- GitHub Action Marketplace display name is now `AgentDoctor Safety`.
+- npm overrides pin patched transitive versions: `js-yaml@4.3.2`, `fast-uri@3.1.8`,
+  `hono@4.13.8`, `qs@6.16.0`.
+- Fixture `fixtures/multi-agent-project` pins `next@15.5.24` (scan fixture only).
+
+### Security
+
+- Clears known high/moderate advisories on transitive lint/MCP stack dependencies
+  without changing the Safety CLI public API.
+- Vitest / `@vitest/mocker` moderate advisory deferred (requires major upgrade).
+
+### Docs
+
+- [docs/DEPENDENCY_SECURITY_AUDIT.md](docs/DEPENDENCY_SECURITY_AUDIT.md)
+- [docs/DEPENDABOT_PR_REVIEW.md](docs/DEPENDABOT_PR_REVIEW.md)
+- [docs/release-notes-v1.1.1.md](docs/release-notes-v1.1.1.md)
 
 ## [1.1.0] — 2026-08-13
 
@@ -273,7 +298,8 @@ First public beta.
 - Not a complete secret scanner
 - Git “tracked secret” detection deferred
 
-[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.1
 [1.1.0]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.0.0
 [0.3.0-beta]: https://github.com/pranee54/AgentDoctor/releases/tag/v0.3.0-beta
