@@ -105,7 +105,8 @@ Previously: 7 reported issues (4 moderate + 3 high in human audit output; adviso
 - Safe fixed line per advisory: `>=4.1.11`; Dependabot PR #43 proposes `vitest@^5.0.0`.
 - Risk: **semver-major** for the test runner (config, reporter, and assertion changes). Repository Dependabot policy already ignores major updates for routine bumps (`.github/dependabot.yml`).
 - Mitigation while deferred: Vitest is **dev-only**; CI does not expose a network-facing Vitest mock server; untrusted projects are not executed as Vitest suites inside this package’s own tests.
-- Recommended follow-up (separate change): upgrade to Vitest 4.1.11 or 5.x on a dedicated branch, run full `npm run verify` + understanding/brain suites, then merge.
+- GitHub Dependabot alerts for GHSA-82fw-gwwq-j7x9 (`vitest` / `@vitest/mocker`) were **dismissed as `tolerable_risk`** on 2026-09-20 with this rationale. PR #43 remains open as the upgrade vehicle.
+- Recommended follow-up (separate change): upgrade to Vitest 4.1.11 or 5.x on a dedicated branch, run full `npm run verify` + understanding/brain suites, then merge #43 (or equivalent) and clear the dismissal by shipping the fixed versions.
 
 ## Package version / architecture
 
@@ -130,6 +131,6 @@ Previously: 7 reported issues (4 moderate + 3 high in human audit output; adviso
 
 ## Remaining release blockers (security)
 
-1. Re-authenticate GitHub CLI and confirm Dependabot alert count drops after this lockfile lands.
-2. Plan a dedicated Vitest 4/5 migration to clear the last moderate advisories.
-3. Close or supersede open Dependabot PRs that this change renders redundant (see `docs/DEPENDABOT_PR_REVIEW.md`).
+1. ~~Re-authenticate GitHub CLI and confirm Dependabot alert count drops after this lockfile lands.~~ Done — open alert count is 0 after transitive fixes + documented Vitest dismissals.
+2. Dedicated Vitest 4/5 migration (tracked by open PR #43) when ready to clear the deferred moderate advisory for real.
+3. ~~Close or supersede open Dependabot PRs that this change renders redundant.~~ Done for security/transitive PRs; #43 kept open on purpose.
