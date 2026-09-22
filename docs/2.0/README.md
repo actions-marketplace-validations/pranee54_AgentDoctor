@@ -2,7 +2,7 @@
 
 Canonical home for AgentDoctor **2.0** architecture, guides, audits, and release evidence.
 
-**Package (current):** `@praneeth_54/agentdoctor@2.0.1` (local/RC; npm may still show 2.0.0 until published). Historical 2.0.0 release report: [release/final-release-report.md](release/final-release-report.md). For 2.0.1 cut docs see [../2.0.1/](../2.0.1/).
+**Package (current):** [`@praneeth_54/agentdoctor@2.0.1`](https://www.npmjs.com/package/@praneeth_54/agentdoctor). Historical 2.0.0 release report: [release/final-release-report.md](release/final-release-report.md). For 2.0.1 cut docs see [../2.0.1/](../2.0.1/).
 
 **Positioning:** Engineering intelligence & safety for AI coding agents.
 

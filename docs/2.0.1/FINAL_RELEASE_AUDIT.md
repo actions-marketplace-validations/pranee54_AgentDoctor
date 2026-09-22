@@ -1,18 +1,20 @@
 # AgentDoctor 2.0.1 — Final Release Audit
 
+> **Historical pre-publish snapshot.** Publish and push completed afterward. Current verified status: [FINAL_RELEASE_REPORT.md](FINAL_RELEASE_REPORT.md) (**RELEASED AND VERIFIED**).
+
 **Date:** 2026-09-23  
 **Package:** `@praneeth_54/agentdoctor@2.0.1`  
 **Auditor role:** release cut (local verify + pack dry-run)
 
 ## Authorization gates (explicit)
 
-| Action             | Status                                       |
+| Action             | Status (at audit time)                       |
 | ------------------ | -------------------------------------------- |
-| `npm publish`      | **NOT AUTHORIZED YET** (ready pending human) |
-| `git push`         | **NOT AUTHORIZED YET**                       |
-| `git commit` / tag | **NOT AUTHORIZED** in this session           |
+| `npm publish`      | Was **NOT AUTHORIZED YET** (later completed) |
+| `git push`         | Was **NOT AUTHORIZED YET** (later completed) |
+| `git commit` / tag | Was **NOT AUTHORIZED** (later completed)     |
 
-Do not publish or push until a human explicitly authorizes each step.
+Do not treat this file as live publish status — use [FINAL_RELEASE_REPORT.md](FINAL_RELEASE_REPORT.md).
 
 ## Version alignment
 

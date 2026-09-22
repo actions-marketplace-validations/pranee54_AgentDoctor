@@ -61,22 +61,22 @@ npm view @praneeth_54/agentdoctor dist-tags        # { latest: '2.0.1', beta: '0
 
 Verified under `/tmp/agentdoctor-2.0.1-published-verification` (registry-only install; no local path / tarball):
 
-| Check | Result |
-| ----- | ------ |
-| `npm install @praneeth_54/agentdoctor@2.0.1` | **PASS** |
-| `npx agentdoctor --version` | **2.0.1** |
-| `npm list @praneeth_54/agentdoctor` | `@praneeth_54/agentdoctor@2.0.1` |
-| `npm root` | `/private/tmp/agentdoctor-2.0.1-published-verification/node_modules` |
+| Check                                        | Result                                                               |
+| -------------------------------------------- | -------------------------------------------------------------------- |
+| `npm install @praneeth_54/agentdoctor@2.0.1` | **PASS**                                                             |
+| `npx agentdoctor --version`                  | **2.0.1**                                                            |
+| `npm list @praneeth_54/agentdoctor`          | `@praneeth_54/agentdoctor@2.0.1`                                     |
+| `npm root`                                   | `/private/tmp/agentdoctor-2.0.1-published-verification/node_modules` |
 
 ## Published CLI / MCP
 
-| Check | Result |
-| ----- | ------ |
-| `agentdoctor scan --help` | **PASS** |
-| `agentdoctor graph --help` | **PASS** |
-| Fixture `scan --json` | **PASS** — `"version": "2.0.1"` |
-| `agentdoctor mcp --help` | **PASS** |
-| MCP `tools/list` | **PASS** — 26 tools; **`change_analyze` present** |
+| Check                      | Result                                            |
+| -------------------------- | ------------------------------------------------- |
+| `agentdoctor scan --help`  | **PASS**                                          |
+| `agentdoctor graph --help` | **PASS**                                          |
+| Fixture `scan --json`      | **PASS** — `"version": "2.0.1"`                   |
+| `agentdoctor mcp --help`   | **PASS**                                          |
+| MCP `tools/list`           | **PASS** — 26 tools; **`change_analyze` present** |
 
 ## Security (what was verified)
 

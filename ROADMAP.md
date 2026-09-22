@@ -112,9 +112,9 @@ Canonical docs: [docs/2.0/README.md](docs/2.0/README.md) · readiness: [docs/2.0
 
 ---
 
-## 2.0.1 — Change assurance hardening — 🟡 Partial
+## 2.0.1 — Change assurance hardening — ✅ Released
 
-In-repo cut for `@praneeth_54/agentdoctor@2.0.1` (npm publish pending human authorization).
+Published: [`@praneeth_54/agentdoctor@2.0.1`](https://www.npmjs.com/package/@praneeth_54/agentdoctor).
 
 Ships **change assurance** (`change analyze` / `change verify`) and **evidence bundles** (inspect + hash verify). Assembles existing git/graph/C4/knowledge/policy/secrets/test-impact signals into an explainable assessment. Status `verified` is reserved for successful evidence hash checks only.
 
