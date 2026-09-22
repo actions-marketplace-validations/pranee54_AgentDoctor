@@ -258,8 +258,11 @@ export async function reviewProposal(options: {
       } else {
         content = `${statusLine}\n\n${content}`;
       }
-      // Drop stale "not approved" parenthetical if present after replacement edge cases
-      content = content.replace(/\s*\(not approved\)/g, "");
+      // Drop stale "not approved" parenthetical if present after replacement edge cases.
+      // Avoid /\s*(...)/g — polynomial ReDoS on uncontrolled proposal markdown.
+      if (content.includes("(not approved)")) {
+        content = content.split("(not approved)").join("");
+      }
       await atomicWriteTextFile(abs, content.endsWith("\n") ? content : `${content}\n`);
     }
   }

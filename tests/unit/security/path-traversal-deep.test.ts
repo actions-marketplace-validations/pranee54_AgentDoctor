@@ -17,8 +17,10 @@ async function makeRepo(): Promise<string> {
     "export function hello(): string { return 'ok'; }\n",
   );
   // Secret outside repo — must never be readable via tools
-  const outside = path.join(os.tmpdir(), `ad-outside-secret-${Date.now()}.txt`);
-  await fs.writeFile(outside, "TOP_SECRET_OUTSIDE=should-not-leak\n");
+  const outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), "ad-outside-"));
+  await fs.chmod(outsideDir, 0o700);
+  const outside = path.join(outsideDir, "secret.txt");
+  await fs.writeFile(outside, "TOP_SECRET_OUTSIDE=should-not-leak\n", { mode: 0o600 });
   await fs.writeFile(path.join(root, ".outside-path"), outside);
   return root;
 }

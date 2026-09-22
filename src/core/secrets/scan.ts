@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { readTextFile } from "../../utils/fs.js";
 import { resolveRepoRoot, toPosixRelative } from "../../utils/path.js";
 
 export interface SecretFinding {
@@ -146,14 +147,9 @@ export async function scanSecrets(options: {
   }
 
   for (const absolute of files) {
-    let content: string;
-    try {
-      const st = await fs.stat(absolute);
-      if (st.size > 512 * 1024) continue;
-      content = await fs.readFile(absolute, "utf8");
-    } catch {
-      continue;
-    }
+    // open+fstat+read via readTextFile — avoids exists/stat→read TOCTOU
+    const content = await readTextFile(absolute, 512 * 1024);
+    if (content === null) continue;
     const lines = content.split(/\r?\n/);
     const rel = toPosixRelative(root, absolute);
     for (let i = 0; i < lines.length; i += 1) {

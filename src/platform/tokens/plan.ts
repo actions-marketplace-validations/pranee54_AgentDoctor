@@ -1,3 +1,4 @@
+import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -65,29 +66,47 @@ export async function planContext(options: {
         excluded.push({ path: rel, reason: "Path escapes repository root" });
         continue;
       }
-      const st = await fs.stat(absolute);
-      const lst = await fs.lstat(absolute);
-      if (lst.isSymbolicLink()) {
-        excluded.push({ path: rel, reason: "Symlink excluded" });
-        continue;
+      // Open first (O_NOFOLLOW rejects symlinks), then fstat+read from the same fd — no TOCTOU.
+      const openFlags =
+        typeof fsConstants.O_NOFOLLOW === "number"
+          ? fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW
+          : fsConstants.O_RDONLY;
+      let handle;
+      try {
+        handle = await fs.open(absolute, openFlags);
+      } catch (error) {
+        const code =
+          error && typeof error === "object" && "code" in error
+            ? String((error as { code: unknown }).code)
+            : "";
+        if (code === "ELOOP") {
+          excluded.push({ path: rel, reason: "Symlink excluded" });
+          continue;
+        }
+        throw error;
       }
-      if (st.size > 100_000) {
-        excluded.push({ path: rel, reason: "File too large for context budget" });
-        continue;
+      try {
+        const st = await handle.stat();
+        if (st.size > 100_000) {
+          excluded.push({ path: rel, reason: "File too large for context budget" });
+          continue;
+        }
+        const text = await handle.readFile("utf8");
+        const tokens = estimateTokens(text);
+        if (used + tokens > budget) {
+          excluded.push({ path: rel, reason: "Would exceed token budget" });
+          continue;
+        }
+        selected.push({
+          path: rel,
+          tokens,
+          relevance,
+          reason: relevance >= 0.6 ? "Path matches query" : "Likely relevant source/doc",
+        });
+        used += tokens;
+      } finally {
+        await handle.close();
       }
-      const text = await fs.readFile(absolute, "utf8");
-      const tokens = estimateTokens(text);
-      if (used + tokens > budget) {
-        excluded.push({ path: rel, reason: "Would exceed token budget" });
-        continue;
-      }
-      selected.push({
-        path: rel,
-        tokens,
-        relevance,
-        reason: relevance >= 0.6 ? "Path matches query" : "Likely relevant source/doc",
-      });
-      used += tokens;
     } catch {
       excluded.push({ path: rel, reason: "Unreadable" });
     }

@@ -27,23 +27,28 @@ export async function analyzeCodeHealth(
     let content: string;
     let size: number;
     try {
-      const st = await fs.stat(absolute);
-      size = st.size;
-      if (size > 512 * 1024) {
-        findings.push({
-          id: fid("filesize", node.path),
-          module: "code-health",
-          severity: "medium",
-          title: "Large source file",
-          message: `${node.path} is ${size} bytes`,
-          recommendation: "Split into smaller modules to reduce change risk",
-          confidence: 0.9,
-          evidence: [{ kind: "verified", path: node.path, detail: `sizeBytes=${size}` }],
-        });
-        continue;
+      const handle = await fs.open(absolute, "r");
+      try {
+        const st = await handle.stat();
+        size = st.size;
+        if (size > 512 * 1024) {
+          findings.push({
+            id: fid("filesize", node.path),
+            module: "code-health",
+            severity: "medium",
+            title: "Large source file",
+            message: `${node.path} is ${size} bytes`,
+            recommendation: "Split into smaller modules to reduce change risk",
+            confidence: 0.9,
+            evidence: [{ kind: "verified", path: node.path, detail: `sizeBytes=${size}` }],
+          });
+          continue;
+        }
+        if (!/\.(ts|tsx|js|jsx|py|go)$/i.test(node.path)) continue;
+        content = await handle.readFile("utf8");
+      } finally {
+        await handle.close();
       }
-      if (!/\.(ts|tsx|js|jsx|py|go)$/i.test(node.path)) continue;
-      content = await fs.readFile(absolute, "utf8");
     } catch {
       continue;
     }

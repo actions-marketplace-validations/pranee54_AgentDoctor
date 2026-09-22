@@ -38,7 +38,7 @@ export async function registerLocalDevUser(options: {
     options.storage ?? new FilesystemStorageProvider(options.root, ".agentdoctor/team");
   const salt = randomBytes(16).toString("hex");
   const user: TeamUser = {
-    id: `user_${createHash("sha1").update(options.username).digest("hex").slice(0, 10)}`,
+    id: `user_${createHash("sha256").update(options.username).digest("hex").slice(0, 10)}`,
     username: options.username,
     passwordHash: hashPassword(options.password, salt),
     salt,

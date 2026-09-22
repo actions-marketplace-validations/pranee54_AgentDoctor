@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 
+import { readTextFile } from "../../utils/fs.js";
 import { resolveRepoRoot, toPosixRelative } from "../../utils/path.js";
 import type { GraphEdge, GraphNode, RepositoryGraph } from "../types.js";
 
@@ -171,27 +172,23 @@ export async function buildRepositoryGraph(rootInput: string): Promise<Repositor
     nodes.push({ id: fileId, kind, label: path.basename(rel), path: rel });
 
     if (CODE_EXT.has(ext)) {
-      try {
-        const st = await fs.stat(absolute);
-        if (st.size > 256 * 1024) continue;
-        const content = await fs.readFile(absolute, "utf8");
-        nodes.push(...extractSymbols(content, rel));
-        const { edges: importEdges, dependencyNodes } = extractImports(content, rel);
-        edges.push(...importEdges);
-        for (const dep of dependencyNodes) {
-          if (!nodes.some((n) => n.id === dep.id)) nodes.push(dep);
-        }
-        if (/router\.|app\.(get|post|put|delete)|@app\.(get|post)/i.test(content)) {
-          nodes.push({
-            id: nodeId("api", rel),
-            kind: "api",
-            label: `api:${path.basename(rel)}`,
-            path: rel,
-            meta: { evidence: "inferred" },
-          });
-        }
-      } catch {
-        // skip unreadable
+      // open+fstat+read via readTextFile — avoids exists/stat→read TOCTOU
+      const content = await readTextFile(absolute, 256 * 1024);
+      if (content === null) continue;
+      nodes.push(...extractSymbols(content, rel));
+      const { edges: importEdges, dependencyNodes } = extractImports(content, rel);
+      edges.push(...importEdges);
+      for (const dep of dependencyNodes) {
+        if (!nodes.some((n) => n.id === dep.id)) nodes.push(dep);
+      }
+      if (/router\.|app\.(get|post|put|delete)|@app\.(get|post)/i.test(content)) {
+        nodes.push({
+          id: nodeId("api", rel),
+          kind: "api",
+          label: `api:${path.basename(rel)}`,
+          path: rel,
+          meta: { evidence: "inferred" },
+        });
       }
     }
   }
