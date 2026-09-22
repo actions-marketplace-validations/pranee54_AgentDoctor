@@ -1,57 +1,112 @@
 # AgentDoctor 2.0.0 — Final release report
 
-**Status:** In progress at commit time; publish/GitHub fields filled after remote verification.
+**Date:** 2026-09-22  
+**Branch:** `main`  
+**Commit:** `c8b6681` — `release: AgentDoctor 2.0.0`  
+**Tag:** `v2.0.0` (annotated)
 
-| Field               | Value                                                                                                            |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Final version       | **2.0.0**                                                                                                        |
-| npm package         | `@praneeth_54/agentdoctor`                                                                                       |
-| Package description | Codebase intelligence, repository analysis, safety controls, and MCP tools for developers and engineering teams. |
-| Local pack size     | **268.1 kB** / **496** files / **1.1 MB** unpacked                                                               |
-| Tests               | **53** files / **394** tests passed (`npm run verify`)                                                           |
-| Git branch          | `main`                                                                                                           |
-| Remote              | `https://github.com/pranee54/AgentDoctor.git`                                                                    |
+---
 
-## Repository organization (this release)
+## Summary
 
-- **Source:** Kept existing subsystem layout under `src/` (no mechanical deep re-nest — already discoverable).
-- **Docs:** Canonical 2.0 under `docs/2.0/`; guides/reference/features/archive/release-notes organized; root `AGENTDOCTOR_2.0.md` pointer.
-- **Scripts:** Perf harness at `scripts/perf/ast-graph.mjs`.
-- **Action:** `action.yml` default version **2.0.0**; CI Action smoke pins updated to **2.0.0**.
-- **Excluded from git:** `*.tgz`, `.private/**`, `node_modules/**`, `dist/**`, `.agentdoctor/**`, generated benchmark JSON.
+| Field             | Value                                                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Final version     | **2.0.0**                                                                                                        |
+| npm package       | `@praneeth_54/agentdoctor`                                                                                       |
+| Description       | Codebase intelligence, repository analysis, safety controls, and MCP tools for developers and engineering teams. |
+| Local pack size   | **268.1 kB** / **496** files / **1.1 MB** unpacked                                                               |
+| Tests             | **53** files / **394** tests — `npm run verify` PASS                                                             |
+| GitHub repository | https://github.com/pranee54/AgentDoctor                                                                          |
+| GitHub Release    | https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.0                                                      |
+| Action default    | `action.yml` → `version: 2.0.0`                                                                                  |
+| npm published     | **BLOCKED** — registry PUT returned 404/unauthorized (token present but not accepted for publish)                |
+| Marketplace       | **MANUAL ACTION REQUIRED**                                                                                       |
+
+---
+
+## Repository organization
+
+- Kept `src/` subsystem layout (no risky mechanical re-nest).
+- Docs: `docs/2.0/` canonical; `guides/`, `reference/`, `features/`, `archive/`, `release-notes/`.
+- Scripts: `scripts/perf/ast-graph.mjs`.
+- Root pointer: `AGENTDOCTOR_2.0.md`.
+- Excluded: `*.tgz`, `.private/**`, `node_modules/**`, `dist/**`, `.agentdoctor/**`, generated benchmarks.
 
 ## Quality
 
-| Check                                | Result                                    |
-| ------------------------------------ | ----------------------------------------- |
-| `npm run verify`                     | PASS                                      |
-| `npm pack` / dry-run                 | PASS (`2.0.0`)                            |
-| Clean-install from local tarball     | PASS (`--version` 2.0.0, scan JSON 2.0.0) |
-| MCP entrypoints (`mcp`, `brain-mcp`) | PASS (help)                               |
-| Secrets in release scope             | No real credentials                       |
-| Packed README claims                 | Limitations labeled; no blanket 5/5       |
+| Check                               | Result                               |
+| ----------------------------------- | ------------------------------------ |
+| `npm run verify`                    | PASS                                 |
+| `npm pack`                          | PASS (`2.0.0`, 268.1 kB, 496 files)  |
+| Clean-install from local tarball    | PASS                                 |
+| `agentdoctor --version` / scan JSON | `2.0.0`                              |
+| `mcp` / `brain-mcp` help            | PASS                                 |
+| Secrets in release commit           | None real                            |
+| Packed README                       | Limitations + labels; no blanket 5/5 |
 
 ## Packaging (Option B)
 
-npm tarball contains only: `dist/`, `README.md`, `CHANGELOG.md`, `LICENSE`, `package.json`.
-`docs/2.0/` remains on GitHub.
+Tarball: `dist/` + `README.md` + `CHANGELOG.md` + `LICENSE` + `package.json` only.
 
-## Known limitations (unchanged honesty)
+## GitHub
 
-See [../overview/known-limitations.md](../overview/known-limitations.md) and README. Partial/experimental surfaces remain labeled.
+| Step                           | Status                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Commit pushed to `origin/main` | **DONE** (`c8b6681`)                                                   |
+| Tag `v2.0.0` pushed            | **DONE**                                                               |
+| GitHub Release created         | **DONE** — https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.0 |
 
-## Post-commit fields (filled after push / publish)
+## npm
 
-| Field                 | Value                                                  |
-| --------------------- | ------------------------------------------------------ |
-| Git commit            | _pending_                                              |
-| Git tag               | `v2.0.0`                                               |
-| GitHub Release URL    | _pending_                                              |
-| npm published version | _pending_                                              |
-| npm package URL       | https://www.npmjs.com/package/@praneeth_54/agentdoctor |
-| Marketplace status    | MANUAL ACTION REQUIRED unless verified                 |
+| Step                          | Status                                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| Registry already has 2.0.0?   | No (404 on view)                                                                                 |
+| `npm publish --access public` | **FAILED** — `404 Not Found` on PUT (typical when auth is invalid/expired for the package owner) |
+| Published version verified    | **NOT DONE**                                                                                     |
 
-## Remaining risks
+### Manual npm publish (required)
 
-- CI Action smoke jobs that install `@praneeth_54/agentdoctor@2.0.0` from the registry require npm publish before those jobs succeed.
-- GitHub Marketplace listing may need a manual “Publish this Action to Marketplace” step in the GitHub UI.
+As package maintainer `praneeth_54`:
+
+```bash
+npm login
+cd /path/to/AgentDoctor   # at c8b6681 / v2.0.0
+npm publish --access public
+npm view @praneeth_54/agentdoctor version   # expect 2.0.0
+```
+
+Then smoke from a clean directory:
+
+```bash
+npm install @praneeth_54/agentdoctor@2.0.0
+npx agentdoctor --version
+```
+
+## GitHub Action / Marketplace
+
+| Item                         | Status                                                                                                                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `action.yml` default `2.0.0` | DONE in tree/tag                                                                                                                                           |
+| CI matrix pins `2.0.0`       | DONE (Action smoke needs published npm 2.0.0)                                                                                                              |
+| Action reference             | `pranee54/AgentDoctor@v2.0.0`                                                                                                                              |
+| Marketplace listing          | **MANUAL ACTION REQUIRED** — use GitHub UI “Publish this Action to the GitHub Marketplace” if not already listed; do not claim published until UI confirms |
+
+## Known limitations
+
+Unchanged honesty: TS/JS AST focus, heuristic test-impact, inferred C4, evaluate-only firewall, local-dev auth (not SSO), no IDE interception, no production DB backends. See README + `docs/2.0/overview/known-limitations.md`.
+
+## Remaining manual actions
+
+1. **npm login + publish** as `praneeth_54`.
+2. Verify published package install/smoke.
+3. Confirm GitHub Marketplace listing / update if needed.
+4. Re-check CI Action smoke jobs after npm 2.0.0 is live.
+
+## Final status
+
+| Gate                               | Status           |
+| ---------------------------------- | ---------------- |
+| Repository clean (local)           | YES              |
+| GitHub commit/tag/release verified | YES              |
+| npm verified                       | **NO — BLOCKED** |
+| Marketplace verified               | **NO — MANUAL**  |
