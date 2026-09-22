@@ -11,4 +11,4 @@ Draft social posts for the public launch of AgentDoctor.
 
 **Do not auto-post.** Publish only after GitHub About metadata, social preview, and (ideally) a real terminal demo asset are ready.
 
-Related: [../github-launch-checklist.md](../github-launch-checklist.md)
+Related: [../github-launch-checklist.md](github-launch-checklist.md)

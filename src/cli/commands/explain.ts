@@ -15,7 +15,7 @@ export async function runExplainCommand(ruleId: string | undefined): Promise<Exi
   const rule = getRuleById(ruleId.trim());
   if (!rule) {
     console.error(`Error: unknown rule id "${ruleId}"`);
-    console.error("Run agentdoctor explain with a documented rule from docs/rules.md");
+    console.error("Run agentdoctor explain with a documented rule from docs/reference/rules.md");
     return EXIT_CODES.USAGE_ERROR;
   }
 

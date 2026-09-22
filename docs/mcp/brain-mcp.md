@@ -172,4 +172,4 @@ Copy into project-local agent config. Do **not** auto-modify global user setting
 | Protocol broken in agent   | Ensure nothing else writes to stdout; logs must use stderr              |
 | Empty ownership            | Add CODEOWNERS / MAINTAINERS / package maintainers                      |
 
-Related: [project-brain.md](../project-brain.md) · [compatibility.md](../compatibility.md)
+Related: [project-brain.md](../features/project-brain.md) · [compatibility.md](../reference/compatibility.md)

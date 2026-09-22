@@ -1,5 +1,6 @@
 import {
   LocalBrainStore,
+  redactBrainForStorage,
   type ProjectBrain,
   type SnapshotMeta,
 } from "../../core/understanding/brain/index.js";
@@ -48,8 +49,10 @@ export class BrainMcpSession {
     }
 
     if (loaded) {
-      this.brain = loaded;
-      this.log(`agentdoctor brain-mcp: loaded snapshot ${loaded.snapshot.id} from ${this.root}`);
+      this.brain = redactBrainForStorage(loaded);
+      this.log(
+        `agentdoctor brain-mcp: loaded snapshot ${this.brain.snapshot.id} from ${this.root}`,
+      );
       return;
     }
 
@@ -112,16 +115,16 @@ export class BrainMcpSession {
           : new BrainMcpError("brain_corrupt", message || "failed to save snapshot");
       }
     }
-    this.brain = brain;
-    return brain;
+    this.brain = redactBrainForStorage(brain);
+    return this.brain;
   }
 
   async loadSnapshot(snapshotId: string): Promise<ProjectBrain> {
     const store = this.getStore();
     try {
       const brain = await store.loadSnapshot(snapshotId);
-      this.brain = brain;
-      return brain;
+      this.brain = redactBrainForStorage(brain);
+      return this.brain;
     } catch (error) {
       const message = error instanceof Error ? error.message : "failed to load snapshot";
       if (/not found|ENOENT/i.test(message)) {

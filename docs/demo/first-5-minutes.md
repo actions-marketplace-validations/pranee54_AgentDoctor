@@ -120,4 +120,4 @@ Structured Brain surfaces: overview, typed queries, explain, trace, claims, evid
 - Vulnerability scanning as Brain risk
 - Invented ownership when evidence is missing
 
-Next: [architecture-walkthrough.md](architecture-walkthrough.md) · [../mcp/brain-mcp.md](../mcp/brain-mcp.md) · [../quickstart.md](../quickstart.md)
+Next: [architecture-walkthrough.md](architecture-walkthrough.md) · [../mcp/brain-mcp.md](../mcp/brain-mcp.md) · [../quickstart.md](../guides/quickstart.md)

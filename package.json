@@ -1,7 +1,7 @@
 {
   "name": "@praneeth_54/agentdoctor",
-  "version": "1.1.1",
-  "description": "Audit AI coding agent configuration in a repository — local, deterministic, no API key.",
+  "version": "2.0.0",
+  "description": "Codebase intelligence, repository analysis, safety controls, and MCP tools for developers and engineering teams.",
   "type": "module",
   "bin": {
     "agentdoctor": "./dist/cli/index.js"
@@ -54,6 +54,10 @@
     "cursor",
     "claude-code",
     "codex",
+    "copilot",
+    "windsurf",
+    "gemini",
+    "aider",
     "mcp",
     "security",
     "linter",
@@ -77,7 +81,8 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "commander": "^14.0.3",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -85,7 +90,6 @@
     "eslint": "^9.39.2",
     "prettier": "^3.7.4",
     "tsx": "^4.23.13",
-    "typescript": "^5.9.3",
     "typescript-eslint": "^8.70.0",
     "vitest": "^3.2.4"
   },

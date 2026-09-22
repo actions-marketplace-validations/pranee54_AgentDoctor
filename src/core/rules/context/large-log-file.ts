@@ -32,7 +32,15 @@ export const largeLogFileRule: RuleDefinition = {
         continue;
       }
 
-      const defaultAgents: AgentId[] = ["cursor", "claude-code", "codex"];
+      const defaultAgents: AgentId[] = [
+        "cursor",
+        "claude-code",
+        "codex",
+        "copilot",
+        "windsurf",
+        "gemini-cli",
+        "aider",
+      ];
       const candidates = configured.length > 0 ? configured : defaultAgents;
       const affected: AgentId[] = [];
       for (const agent of candidates) {
@@ -45,6 +53,13 @@ export const largeLogFileRule: RuleDefinition = {
         if (agent === "codex" && (await codexDeniesPath(context, file.relativePath))) {
           continue;
         }
+        if (agent === "gemini-cli" && context.ignore.matchesGeminiignore(file.relativePath)) {
+          continue;
+        }
+        if (agent === "aider" && context.ignore.matchesAiderignore(file.relativePath)) {
+          continue;
+        }
+        // Copilot / Windsurf: no official project deny/ignore path.
         affected.push(agent);
       }
       if (affected.length === 0) {

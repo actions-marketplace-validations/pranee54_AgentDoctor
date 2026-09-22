@@ -41,8 +41,9 @@ describe("release hardening regressions", () => {
     const terminal = renderTerminalReport(result);
     expect(terminal).toContain("Readiness: n/a");
     expect(terminal).not.toMatch(/Readiness: 100\/100/);
-    expect(terminal).toContain("Nothing to audit yet");
-    expect(terminal).toContain("Next: add project agent config");
+    expect(terminal).toContain("No repository-hygiene findings");
+    expect(terminal).toContain("Optional next: add project agent config");
+    expect(terminal).toContain("repository hygiene still applied");
   });
 
   it("Codex Fix refuses unrecognizable config.toml content", () => {

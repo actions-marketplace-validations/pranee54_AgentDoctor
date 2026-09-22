@@ -76,6 +76,10 @@ describe("computeReadinessScores (docs/scoring.md)", () => {
       cursor: 100,
       "claude-code": 100,
       codex: 100,
+      copilot: 100,
+      windsurf: 100,
+      "gemini-cli": 100,
+      aider: 100,
     });
   });
 
@@ -254,6 +258,10 @@ describe("computeReadinessScores (docs/scoring.md)", () => {
     expect(scores.agents.cursor).toBe(65);
     expect(scores.agents["claude-code"]).toBe(65);
     expect(scores.agents.codex).toBe(65);
+    expect(scores.agents.copilot).toBe(100);
+    expect(scores.agents.windsurf).toBe(100);
+    expect(scores.agents["gemini-cli"]).toBe(100);
+    expect(scores.agents.aider).toBe(100);
   });
 
   it("computes independent agent scores from affectedAgents", () => {
@@ -285,6 +293,10 @@ describe("computeReadinessScores (docs/scoring.md)", () => {
     expect(scores.agents.cursor).toBe(90);
     expect(scores.agents["claude-code"]).toBe(90);
     expect(scores.agents.codex).toBe(100);
+    expect(scores.agents.copilot).toBe(100);
+    expect(scores.agents.windsurf).toBe(100);
+    expect(scores.agents["gemini-cli"]).toBe(100);
+    expect(scores.agents.aider).toBe(100);
   });
 
   it("computes independent category scores", () => {
@@ -402,6 +414,10 @@ describe("computeReadinessScores (docs/scoring.md)", () => {
       cursor: 100,
       "claude-code": 100,
       codex: 100,
+      copilot: 100,
+      windsurf: 100,
+      "gemini-cli": 100,
+      aider: 100,
     });
   });
 });

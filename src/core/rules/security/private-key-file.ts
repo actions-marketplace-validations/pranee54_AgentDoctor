@@ -67,7 +67,7 @@ export const privateKeyFileRule: RuleDefinition = {
         message: `Possible ${label} detected at ${file.relativePath}`,
         whyItMatters: agentsPresent
           ? "Credential material in the working tree can be read by AI coding agents and may leak into model context or logs. Filename heuristics only — contents were not inspected."
-          : "Credential material in the working tree is high-risk repository content. No supported coding-agent configuration was detected, so agent-specific exposure was not asserted. Filename heuristics only — contents were not inspected.",
+          : "Credential material in the working tree is high-risk repository content. No supported coding-agent configuration was detected, so agent-specific exposure was not asserted. Repository hygiene still applies. Filename heuristics only — contents were not inspected.",
         recommendation:
           "Remove the file from the repository, rotate the credential, add ignore rules, and never commit replacements.",
         affectedAgents: affected,

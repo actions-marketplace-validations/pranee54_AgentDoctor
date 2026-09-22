@@ -9,8 +9,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 
+- Post-cut work only. Version cut for **2.0.0** is recorded below (not yet
+  committed, tagged, or published unless a human does so separately).
+
+## [2.0.0] — 2026-09-21
+
+AgentDoctor 2.0 expands the product from Safety + Project Brain into **codebase
+intelligence** for developers, agents, and engineering teams — while preserving
+Safety CLI behavior and Brain MCP tool names.
+
+Canonical docs: [docs/2.0/](docs/2.0/README.md). Readiness:
+[docs/2.0/overview/readiness-matrix.md](docs/2.0/overview/readiness-matrix.md).
+Limitations: [docs/2.0/overview/known-limitations.md](docs/2.0/overview/known-limitations.md).
+
+### Added
+
+- Shared contracts layer (`CONTRACTS_VERSION`) unifying findings / graph /
+  knowledge / policy shapes.
+- Repository Brain productization: `init`, proposal artifacts, `brain review` /
+  `brain proposals` / product snapshots (proposals never auto-approved).
+- TypeScript/JavaScript AST intelligence graph (`graph`) with regex fallback.
+- Git engineering intelligence (`health`) with per-metric method disclosure.
+- C4-style architecture views (`c4`) labeled inferred/proposed.
+- Impact surfaces: `impact`, `test-impact`, `refactor-impact`.
+- Governed knowledge store with abstention (`knowledge`, `knowledge-create`,
+  `knowledge-approve`).
+- Policy packs + AgentDoctor-controlled enforcement runner (`enforce`) distinct
+  from evaluate-only firewall.
+- Combined MCP server (`agentdoctor mcp`) exposing Brain tools **plus**
+  intelligence tools without renaming `brain_*`.
+- Dashboard `/api/v2/*` endpoints (graph, health, c4, knowledge,
+  projects/workspaces stubs).
+- Local-dev team authentication (`team-register`, `team-login`) — not enterprise SSO.
+- Ops health via `doctor --json`.
+- Security hardening: MCP/dashboard path-safety, symlink skip in AST walk,
+  secret redaction on exports/API samples.
+- Documentation tree: `docs/2.0/` (overview, guides, reports, audits, release).
+- Additional 2.0 platform / Safety surfaces landed with this release train:
+  evaluate-only Action Policy Evaluator (`platform policy-check`, alias
+  `firewall-check`), session audit, provenance, context-security, architecture
+  drift, time-machine, token planner, readiness scorecard, multi-format reports,
+  Copilot / Windsurf / Gemini CLI / Aider adapters, Project Brain CLI
+  (`brain init|status|inspect|rebuild|history|search|export|import`),
+  `changes`, `context-health`, `secrets`, Safe Fix 2.0 backup/undo, named
+  baselines, monorepo `packages`, local `pr-review`, loopback `dashboard`,
+  `plugins`, optional `local-ai`.
+
+### Security
+
+- Path-traversal hardening for MCP `dependency_lookup` and dashboard hostile URLs.
+- Evaluate-only policy evaluation remains explicit (`executionResult: "not-executed"`).
+- `blocked-by-enforcement` only on the AgentDoctor-controlled runner block path.
+- Loopback dashboard default retained; non-loopback requires explicit opt-in.
+- Safe Fix target hardening: refuse symlink write-through, symlink ancestors,
+  directory targets, and non-allowlisted paths.
+
+### Compatibility
+
+- Safety `scan` / `fix` / `verify` workflows and exit codes preserved.
+- Brain MCP tool names preserved (`brain_overview`, …, `brain_snapshot`).
+- Additive CLI commands only; no intentional removal of 1.x public surfaces.
+- Platform evaluate-only firewall behavior preserved.
+
+### Known limitations (at release)
+
+- AST analysis is TypeScript/JavaScript-focused; other languages unsupported for
+  deep graph analysis.
+- Test-impact is heuristic/graph-based (no coverage-file oracle).
+- C4 views are inferred, not approved architecture truth.
+- No IDE interception of third-party agents.
+- Local-dev team auth is not SSO.
+- SQLite/Postgres/vector backends are not production-complete.
+- See README limitations and `docs/2.0/overview/known-limitations.md`.
+
+### Migration notes
+
+- Upgrading from 1.1.x: existing `.agentdoctor` Safety/Brain data remains valid.
+- New directories may appear under `.agentdoctor/repository-brain/`,
+  `.agentdoctor/knowledge/`, `.agentdoctor/team/`, `.agentdoctor/platform/`.
+- Treat `init` outputs as **proposed** until reviewed.
+- Prefer `agentdoctor mcp` for combined tools; `brain-mcp` remains for Brain-only clients.
+- Full guide: [docs/2.0/guides/migration.md](docs/2.0/guides/migration.md).
+
+### Notes
+
+- Readiness matrix classifications remain honest; many 2.0 surfaces are
+  **implemented but partially validated**. No blanket 5/5 claims.
+- Multi-writer Safe Fix is still not fully atomic across targets after preflight.
 - Vitest 3 → 4/5 major upgrade remains deferred (dev-only moderate advisory).
-- Do **not** auto-publish from CI agents.
+- Do **not** auto-publish from CI agents. Tag/publish require a separate human step.
 
 ## [1.1.1] — 2026-09-20
 
@@ -33,9 +120,9 @@ GitHub Release, and Action default are aligned on **`1.1.1`**.
 
 ### Docs
 
-- [docs/DEPENDENCY_SECURITY_AUDIT.md](docs/DEPENDENCY_SECURITY_AUDIT.md)
-- [docs/DEPENDABOT_PR_REVIEW.md](docs/DEPENDABOT_PR_REVIEW.md)
-- [docs/release-notes-v1.1.1.md](docs/release-notes-v1.1.1.md)
+- [docs/archive/DEPENDENCY_SECURITY_AUDIT.md](docs/archive/DEPENDENCY_SECURITY_AUDIT.md)
+- [docs/archive/DEPENDABOT_PR_REVIEW.md](docs/archive/DEPENDABOT_PR_REVIEW.md)
+- [docs/release-notes/v1.1.1.md](docs/release-notes/v1.1.1.md)
 
 ## [1.1.0] — 2026-08-13
 
@@ -131,7 +218,7 @@ First production release: Scan → Fix → Verify → CI contract frozen for v1.
 
 ### Compatibility
 
-- CLI + JSON + rule ID contracts frozen for v1 (see [docs/compatibility.md](docs/compatibility.md))
+- CLI + JSON + rule ID contracts frozen for v1 (see [docs/reference/compatibility.md](docs/reference/compatibility.md))
 - Action `version` input default is `1.0.0` (bumped after npm published `@praneeth_54/agentdoctor@1.0.0`)
 
 ## [0.3.0-beta] — 2026-08-07
@@ -175,7 +262,7 @@ Minor beta: deterministic readiness scoring and CLI `--min-score` enforcement.
 
 - Deterministic readiness scoring (v1): `scan()` populates `scoringAvailable: true` and
   `scores` (`overall`, `categories`, `agents`) from post-dedupe findings
-  ([docs/scoring.md](docs/scoring.md))
+  ([docs/reference/scoring.md](docs/reference/scoring.md))
 - CLI `--min-score N` enforcement: exit code `1` when `scores.overall < N`
 - `--ci` without `--min-score` remains report-only (exit `0` on successful scan)
 - Scoring specification and compatibility / exit-code docs updated for shipped behavior
@@ -298,7 +385,8 @@ First public beta.
 - Not a complete secret scanner
 - Git “tracked secret” detection deferred
 
-[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/pranee54/AgentDoctor/compare/v1.1.1...v2.0.0
 [1.1.1]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.1
 [1.1.0]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.0.0

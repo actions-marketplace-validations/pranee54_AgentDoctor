@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import { atomicWriteTextFile, readTextFile } from "../../../utils/fs.js";
+import { resolveSafeFixWritePath } from "../safe-target.js";
 import { missingPatternsForCursorignore } from "../plan.js";
 import type { FixAction } from "../types.js";
 
@@ -68,7 +69,8 @@ export async function readCursorignore(root: string): Promise<string | null> {
 }
 
 export async function writeCursorignore(root: string, content: string): Promise<void> {
-  await atomicWriteTextFile(path.join(root, ".cursorignore"), content);
+  const { absolutePath } = await resolveSafeFixWritePath(root, ".cursorignore");
+  await atomicWriteTextFile(absolutePath, content);
 }
 
 function formatSimpleDiff(fileLabel: string, before: string, after: string): string {

@@ -32,7 +32,15 @@ function scores(overall: number): Scores {
       compatibility: 100,
       performance: 100,
     },
-    agents: { cursor: 100, "claude-code": 100, codex: 100 },
+    agents: {
+      cursor: 100,
+      "claude-code": 100,
+      codex: 100,
+      copilot: 100,
+      windsurf: 100,
+      "gemini-cli": 100,
+      aider: 100,
+    },
   };
 }
 

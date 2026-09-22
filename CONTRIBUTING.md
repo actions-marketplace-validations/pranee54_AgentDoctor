@@ -10,7 +10,7 @@ Thanks for helping improve AgentDoctor — evidence-backed Project Brain for AI 
 | Project Brain | Structured understanding: claims, evidence, confidence, UNKNOWN, snapshots |
 | MCP           | STDIO bridge: `agentdoctor brain-mcp --root <abs>` — ten `brain_*` tools   |
 
-Read [docs/why-agentdoctor.md](docs/why-agentdoctor.md) and [ROADMAP.md](ROADMAP.md) before proposing large architecture changes.
+Read [docs/guides/why-agentdoctor.md](docs/guides/why-agentdoctor.md) and [ROADMAP.md](ROADMAP.md) before proposing large architecture changes.
 
 ## Development setup
 
@@ -58,8 +58,8 @@ node dist/cli/index.js brain-mcp --root /ABSOLUTE/PATH/TO/PROJECT
 ## Documentation changes
 
 - Keep claims aligned with implemented behavior
-- Prefer links to [docs/quickstart.md](docs/quickstart.md), [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md), [docs/project-brain.md](docs/project-brain.md)
-- Update [docs/rules.md](docs/rules.md) when Safety rules change
+- Prefer links to [docs/guides/quickstart.md](docs/guides/quickstart.md), [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md), [docs/features/project-brain.md](docs/features/project-brain.md)
+- Update [docs/reference/rules.md](docs/reference/rules.md) when Safety rules change
 - Do not invent benchmarks, user counts, or “zero hallucination” claims
 
 ## Proposing architecture changes
@@ -102,6 +102,6 @@ Use [feature request](.github/ISSUE_TEMPLATE/feature_request.md) and say whether
 4. `npm run verify` (and Brain/MCP gates when those areas change)
 5. Fill the PR template
 
-Starter ideas: [docs/community/good-first-issues.md](docs/community/good-first-issues.md) · [docs/good-first-issues.md](docs/good-first-issues.md)
+Starter ideas: [docs/community/good-first-issues.md](docs/community/good-first-issues.md) · [docs/development/good-first-issues.md](docs/development/good-first-issues.md)
 
 Be respectful: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

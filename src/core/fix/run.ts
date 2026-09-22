@@ -2,7 +2,13 @@ import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
 import { scan } from "../scanner/scan.js";
-import { applyFixPlan, readClaudeSettings, readCodexConfig, readCursorignore } from "./apply.js";
+import {
+  applyFixPlan,
+  readClaudeSettings,
+  readCodexConfig,
+  readCursorignore,
+  readSimpleIgnore,
+} from "./apply.js";
 import { buildFixPlan } from "./plan.js";
 import { renderFixPlanTerminal } from "./render.js";
 import type { FixApplyResult, FixPlan } from "./types.js";
@@ -28,6 +34,8 @@ export async function runFix(options: RunFixOptions): Promise<RunFixResult> {
   const cursorContent = await readCursorignore(plan.root);
   const claudeSettingsContent = await readClaudeSettings(plan.root);
   const codexConfigContent = await readCodexConfig(plan.root);
+  const geminiignoreContent = await readSimpleIgnore(plan.root, ".geminiignore");
+  const aiderignoreContent = await readSimpleIgnore(plan.root, ".aiderignore");
 
   if (plan.actions.length === 0 || options.dryRun) {
     const applyResult = await applyFixPlan(plan, { dryRun: true });
@@ -40,6 +48,8 @@ export async function runFix(options: RunFixOptions): Promise<RunFixResult> {
       cursorContent,
       claudeSettingsContent,
       codexConfigContent,
+      geminiignoreContent,
+      aiderignoreContent,
     });
     process.stdout.write(previewText);
     const confirmed = await confirm("Apply these changes?");

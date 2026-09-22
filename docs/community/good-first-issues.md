@@ -4,21 +4,21 @@ Realistic starter contributions compatible with AgentDoctor **1.1.0**. Prefer sm
 
 Do **not** treat Agent Context / task_context APIs as first issues — those are 🟡 Planned in [ROADMAP.md](../../ROADMAP.md).
 
-Also see Safety-oriented starters: [../good-first-issues.md](../good-first-issues.md).
+Also see Safety-oriented starters: [../good-first-issues.md](../development/good-first-issues.md).
 
 ---
 
 ### 1. Expand Quickstart troubleshooting with real failure strings
 
-|                |                                                                                                      |
-| -------------- | ---------------------------------------------------------------------------------------------------- |
-| **Difficulty** | Easy                                                                                                 |
-| **Area**       | Docs                                                                                                 |
-| **Problem**    | New users hit `--root` / stdout pollution / empty ownership without recognizing stderr messages      |
-| **Expected**   | Add 2–3 troubleshooting rows to `docs/quickstart.md` with exact CLI/MCP error substrings from source |
-| **Acceptance** | Strings match `src/cli/commands/brain-mcp.ts` / MCP errors; no invented messages                     |
-| **Files**      | `docs/quickstart.md`, `src/mcp/brain/errors.ts`                                                      |
-| **Validate**   | Manual read + grep for quoted strings                                                                |
+|                |                                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Difficulty** | Easy                                                                                                        |
+| **Area**       | Docs                                                                                                        |
+| **Problem**    | New users hit `--root` / stdout pollution / empty ownership without recognizing stderr messages             |
+| **Expected**   | Add 2–3 troubleshooting rows to `docs/guides/quickstart.md` with exact CLI/MCP error substrings from source |
+| **Acceptance** | Strings match `src/cli/commands/brain-mcp.ts` / MCP errors; no invented messages                            |
+| **Files**      | `docs/guides/quickstart.md`, `src/mcp/brain/errors.ts`                                                      |
+| **Validate**   | Manual read + grep for quoted strings                                                                       |
 
 ### 2. Add a Brain fixture note for ownership UNKNOWN
 

@@ -6,6 +6,7 @@ import {
   readClaudeSettings,
   readCodexConfig,
   readCursorignore,
+  readSimpleIgnore,
 } from "../../core/fix/apply.js";
 import { buildFixPlan } from "../../core/fix/plan.js";
 import { renderFixPlanTerminal } from "../../core/fix/render.js";
@@ -40,6 +41,8 @@ export async function runFixCommand(options: FixCommandOptions): Promise<ExitCod
       const cursorContent = await readCursorignore(plan.root);
       const claudeSettingsContent = await readClaudeSettings(plan.root);
       const codexConfigContent = await readCodexConfig(plan.root);
+      const geminiignoreContent = await readSimpleIgnore(plan.root, ".geminiignore");
+      const aiderignoreContent = await readSimpleIgnore(plan.root, ".aiderignore");
       const applyResult = await applyFixPlan(plan, { dryRun: true });
       process.stdout.write(
         renderFixPlanTerminal(plan, {
@@ -47,9 +50,15 @@ export async function runFixCommand(options: FixCommandOptions): Promise<ExitCod
           cursorContent,
           claudeSettingsContent,
           codexConfigContent,
+          geminiignoreContent,
+          aiderignoreContent,
           applyResult,
         }),
       );
+      if (applyResult.error) {
+        console.error(`Error: ${applyResult.error}`);
+        return EXIT_CODES.USAGE_ERROR;
+      }
       return EXIT_CODES.SUCCESS;
     }
 
@@ -67,15 +76,26 @@ export async function runFixCommand(options: FixCommandOptions): Promise<ExitCod
     const cursorContentAfter = await readCursorignore(plan.root);
     const claudeSettingsAfter = await readClaudeSettings(plan.root);
     const codexConfigAfter = await readCodexConfig(plan.root);
+    const geminiignoreAfter = await readSimpleIgnore(plan.root, ".geminiignore");
+    const aiderignoreAfter = await readSimpleIgnore(plan.root, ".aiderignore");
     process.stdout.write(
       renderFixPlanTerminal(plan, {
         dryRun: false,
         cursorContent: cursorContentAfter,
         claudeSettingsContent: claudeSettingsAfter,
         codexConfigContent: codexConfigAfter,
+        geminiignoreContent: geminiignoreAfter,
+        aiderignoreContent: aiderignoreAfter,
         applyResult,
       }),
     );
+
+    if (applyResult.error) {
+      console.error(`Error: ${applyResult.error}`);
+      return isFixConfigOrPermissionError(applyResult.error)
+        ? EXIT_CODES.USAGE_ERROR
+        : EXIT_CODES.INTERNAL_ERROR;
+    }
 
     if (applyResult.writtenFiles.length > 0) {
       const after = await scan({ cwd: target });
@@ -103,9 +123,11 @@ export async function runFixCommand(options: FixCommandOptions): Promise<ExitCod
 function isFixConfigOrPermissionError(message: string): boolean {
   return (
     message.includes("refusing") ||
+    message.includes("not allowlisted") ||
     message.includes("not valid JSON") ||
     message.includes("EACCES") ||
     message.includes("EPERM") ||
-    message.includes("permission denied")
+    message.includes("permission denied") ||
+    message.includes("symlink")
   );
 }

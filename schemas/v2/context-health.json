@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentdoctor.local/schemas/v2/context-health.json",
+  "title": "ContextHealthReport",
+  "type": "object",
+  "required": ["root", "conflicts", "instructionFiles", "ignoreFiles"],
+  "properties": {
+    "root": { "type": "string" },
+    "instructionFiles": { "type": "array", "items": { "type": "string" } },
+    "ignoreFiles": { "type": "array", "items": { "type": "string" } },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "severity", "files", "message", "confidence"],
+        "properties": {
+          "kind": { "type": "string" },
+          "severity": { "type": "string", "enum": ["warning", "info"] },
+          "files": { "type": "array", "items": { "type": "string" } },
+          "message": { "type": "string" },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+        }
+      }
+    }
+  }
+}

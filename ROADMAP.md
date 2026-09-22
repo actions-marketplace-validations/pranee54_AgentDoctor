@@ -37,7 +37,7 @@ This document is milestone-based. It does **not** promise calendar dates.
 | P3       | Additional MCP transports beyond STDIO                                            | 🔵 Exploratory       |
 | P3       | Optional telemetry / key-gated AI-assisted analysis                               | 🔵 Exploratory       |
 
-Safety precision work continues in parallel: prefer corpus-backed, measurable improvements over large architectural rewrites ([docs/scoring.md](docs/scoring.md), [docs/compatibility.md](docs/compatibility.md)).
+Safety precision work continues in parallel: prefer corpus-backed, measurable improvements over large architectural rewrites ([docs/reference/scoring.md](docs/reference/scoring.md), [docs/reference/compatibility.md](docs/reference/compatibility.md)).
 
 ---
 
@@ -52,9 +52,9 @@ First production Safety contract (`1.0.0`): audit project-level AI coding agent 
 - Safe context Fix: Cursor `.cursorignore`, Claude Code Read deny, Codex filesystem deny
 - Shared policy gates: `--min-score`, `--fail-on-severity`, `--fail-on-rule`, `--fail-on-new`
 - GitHub Action with JSON report artifact; `version: workspace` for local `dist/cli`
-- Readiness scoring (0–100) — [docs/scoring.md](docs/scoring.md)
+- Readiness scoring (0–100) — [docs/reference/scoring.md](docs/reference/scoring.md)
 - Cross-platform CI (including Windows) and Windows-safe Fix overwrite
-- Compatibility promises — [docs/compatibility.md](docs/compatibility.md)
+- Compatibility promises — [docs/reference/compatibility.md](docs/reference/compatibility.md)
 
 Brain risk in later releases is **change-danger analysis**, not a replacement for Safety or a vulnerability scanner.
 
@@ -96,7 +96,7 @@ AgentDoctor
 - Real-agent harness (`validation/mcp-agent`) — Cursor MCP tool discovery exercised; authenticated LLM Q1–Q7 grading may remain environment-blocked
 - Cross-platform CI hardening during the 1.1.0 release train
 
-Docs: [docs/project-brain.md](docs/project-brain.md) · [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md) · [docs/release-notes-v1.1.0.md](docs/release-notes-v1.1.0.md)
+Docs: [docs/features/project-brain.md](docs/features/project-brain.md) · [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md) · [docs/release-notes/v1.1.0.md](docs/release-notes/v1.1.0.md)
 
 ---
 
@@ -106,7 +106,7 @@ Docs: [docs/project-brain.md](docs/project-brain.md) · [docs/mcp/brain-mcp.md](
 
 In-repo materials (documentation only):
 
-- [docs/quickstart.md](docs/quickstart.md)
+- [docs/guides/quickstart.md](docs/guides/quickstart.md)
 - [docs/demo/first-5-minutes.md](docs/demo/first-5-minutes.md)
 - [docs/community/good-first-issues.md](docs/community/good-first-issues.md)
 - [docs/community/first-10-users.md](docs/community/first-10-users.md)
@@ -307,7 +307,7 @@ Longer-term possibilities (none shipped as enterprise product):
 
 Still relevant from the prior roadmap and still valid:
 
-- **🟡 Planned:** scoring follow-ups deferred in [docs/scoring.md](docs/scoring.md)
+- **🟡 Planned:** scoring follow-ups deferred in [docs/reference/scoring.md](docs/reference/scoring.md)
 - **🟡 Planned:** additional agent adapters via the existing registry
 - **🟡 Planned:** richer MCP **configuration** analysis without executing servers (Safety path)
 - **🔵 Exploratory:** badge generation from CI artifacts; optional opt-in telemetry; optional clearly separated key-gated AI-assisted analysis; hosted badge service (separate product decision)

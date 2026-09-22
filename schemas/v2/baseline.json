@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentdoctor.local/schemas/v2/baseline.json",
+  "title": "NamedBaseline",
+  "type": "object",
+  "required": ["name", "createdAt", "root", "findingIds", "findingFingerprints", "counts"],
+  "properties": {
+    "name": { "type": "string" },
+    "createdAt": { "type": "string" },
+    "root": { "type": "string" },
+    "findingIds": { "type": "array", "items": { "type": "string" } },
+    "findingFingerprints": { "type": "array", "items": { "type": "string" } },
+    "counts": {
+      "type": "object",
+      "required": ["total", "critical", "warning", "info"],
+      "properties": {
+        "total": { "type": "integer" },
+        "critical": { "type": "integer" },
+        "warning": { "type": "integer" },
+        "info": { "type": "integer" }
+      }
+    }
+  }
+}

@@ -14,6 +14,15 @@ export type AgentConfigFileKind =
   | "claude-settings"
   | "claude-settings-local"
   | "codex-config"
+  | "copilot-instructions"
+  | "copilot-path-instructions"
+  | "windsurf-rule-md"
+  | "windsurf-legacy-rules"
+  | "gemini-md"
+  | "gemini-settings"
+  | "aider-conf"
+  | "aider-ignore"
+  | "aider-conventions"
   | "other";
 
 export type AgentConfigScope = "root" | "nested" | "legacy";

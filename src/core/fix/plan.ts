@@ -24,13 +24,24 @@ function codexConfigured(result: ScanResult): boolean {
   return result.agents.some((a) => a.id === "codex" && (a.detected || a.configured));
 }
 
-async function loadCursorignorePatterns(root: string): Promise<string[]> {
-  const filePath = path.join(root, ".cursorignore");
-  const text = await readTextFile(filePath, DEFAULT_MAX_IGNORE_BYTES);
+function geminiConfigured(result: ScanResult): boolean {
+  return result.agents.some((a) => a.id === "gemini-cli" && (a.detected || a.configured));
+}
+
+function aiderConfigured(result: ScanResult): boolean {
+  return result.agents.some((a) => a.id === "aider" && (a.detected || a.configured));
+}
+
+async function loadIgnorePatterns(root: string, relativePath: string): Promise<string[]> {
+  const text = await readTextFile(path.join(root, relativePath), DEFAULT_MAX_IGNORE_BYTES);
   if (text === null) {
     return [];
   }
   return parseIgnoreFile(text);
+}
+
+async function loadCursorignorePatterns(root: string): Promise<string[]> {
+  return loadIgnorePatterns(root, ".cursorignore");
 }
 
 async function loadClaudeSettingsText(root: string): Promise<string | null> {
@@ -43,7 +54,8 @@ async function loadCodexConfigText(root: string): Promise<string | null> {
 
 /**
  * Build a fix plan from a scan result.
- * Safe context exclusions: Cursor `.cursorignore`, Claude Code Read deny, Codex filesystem deny.
+ * Safe context exclusions: Cursor `.cursorignore`, Claude Code Read deny, Codex filesystem deny,
+ * Gemini CLI `.geminiignore`, Aider `.aiderignore`.
  */
 export async function buildFixPlan(result: ScanResult): Promise<FixPlan> {
   const root = result.repository.root;
@@ -51,9 +63,13 @@ export async function buildFixPlan(result: ScanResult): Promise<FixPlan> {
   const actionsByKey = new Map<string, FixAction>();
 
   const existingCursorPatterns = await loadCursorignorePatterns(root);
+  const existingGeminiPatterns = await loadIgnorePatterns(root, ".geminiignore");
+  const existingAiderPatterns = await loadIgnorePatterns(root, ".aiderignore");
   const cursorIndex = createIgnoreIndex({
     gitignorePatterns: [],
     cursorignorePatterns: existingCursorPatterns,
+    geminiignorePatterns: existingGeminiPatterns,
+    aiderignorePatterns: existingAiderPatterns,
   });
   const claudeSettingsText = await loadClaudeSettingsText(root);
   const codexConfigText = await loadCodexConfigText(root);
@@ -61,6 +77,8 @@ export async function buildFixPlan(result: ScanResult): Promise<FixPlan> {
   const hasCursor = cursorConfigured(result);
   const hasClaude = claudeConfigured(result);
   const hasCodex = codexConfigured(result);
+  const hasGemini = geminiConfigured(result);
+  const hasAider = aiderConfigured(result);
 
   for (const finding of result.findings) {
     if (finding.fixability !== "safe") {
@@ -100,6 +118,8 @@ export async function buildFixPlan(result: ScanResult): Promise<FixPlan> {
     const wantsCursor = finding.affectedAgents.includes("cursor");
     const wantsClaude = finding.affectedAgents.includes("claude-code");
     const wantsCodex = finding.affectedAgents.includes("codex");
+    const wantsGemini = finding.affectedAgents.includes("gemini-cli");
+    const wantsAider = finding.affectedAgents.includes("aider");
 
     if (wantsCursor && hasCursor) {
       if (
@@ -150,8 +170,6 @@ export async function buildFixPlan(result: ScanResult): Promise<FixPlan> {
           reason: "Already excluded by Codex filesystem deny",
         });
       } else if (codexConfigText) {
-        // Refuse unwritable/invalid config the same way Claude Fix refuses bad JSON —
-        // do not silently skip and leave Codex findings uncleared after a partial Cursor write.
         assertWritableCodexConfig(codexConfigText);
         mergeCodexAction(actionsByKey, finding, pattern, evidencePath, denyKey);
       } else {
@@ -165,8 +183,79 @@ export async function buildFixPlan(result: ScanResult): Promise<FixPlan> {
       });
     }
 
+    if (wantsGemini && hasGemini) {
+      if (
+        cursorIndex.matchesGeminiignore(evidencePath) ||
+        cursorIndex.matchesGeminiignore(pattern)
+      ) {
+        skipped.push({
+          findingId: finding.id,
+          ruleId: finding.ruleId,
+          reason: "Already excluded by .geminiignore",
+        });
+      } else {
+        mergeSimpleIgnoreAction(actionsByKey, finding, pattern, evidencePath, {
+          agent: "gemini-cli",
+          targetRelativePath: ".geminiignore",
+          label: "Gemini CLI",
+        });
+      }
+    } else if (wantsGemini && !hasGemini) {
+      skipped.push({
+        findingId: finding.id,
+        ruleId: finding.ruleId,
+        reason: "Gemini CLI not detected; skipping .geminiignore fix",
+      });
+    }
+
+    if (wantsAider && hasAider) {
+      if (cursorIndex.matchesAiderignore(evidencePath) || cursorIndex.matchesAiderignore(pattern)) {
+        skipped.push({
+          findingId: finding.id,
+          ruleId: finding.ruleId,
+          reason: "Already excluded by .aiderignore",
+        });
+      } else {
+        mergeSimpleIgnoreAction(actionsByKey, finding, pattern, evidencePath, {
+          agent: "aider",
+          targetRelativePath: ".aiderignore",
+          label: "Aider",
+        });
+      }
+    } else if (wantsAider && !hasAider) {
+      skipped.push({
+        findingId: finding.id,
+        ruleId: finding.ruleId,
+        reason: "Aider not detected; skipping .aiderignore fix",
+      });
+    }
+
     for (const agent of finding.affectedAgents) {
-      if (agent === "cursor" || agent === "claude-code" || agent === "codex") {
+      if (
+        agent === "cursor" ||
+        agent === "claude-code" ||
+        agent === "codex" ||
+        agent === "gemini-cli" ||
+        agent === "aider"
+      ) {
+        continue;
+      }
+      if (agent === "copilot") {
+        skipped.push({
+          findingId: finding.id,
+          ruleId: finding.ruleId,
+          reason:
+            "GitHub Copilot has no official project deny/ignore Fix writer; review instructions and .gitignore manually",
+        });
+        continue;
+      }
+      if (agent === "windsurf") {
+        skipped.push({
+          findingId: finding.id,
+          ruleId: finding.ruleId,
+          reason:
+            "Windsurf has no official project deny/ignore Fix writer; review rules and .gitignore manually",
+        });
         continue;
       }
       skipped.push({
@@ -267,8 +356,40 @@ function mergeCodexAction(
   });
 }
 
-/** Patterns that would be newly appended given current file contents. */
-export function missingPatternsForCursorignore(
+function mergeSimpleIgnoreAction(
+  actionsByKey: Map<string, FixAction>,
+  finding: Finding,
+  pattern: string,
+  evidencePath: string,
+  options: {
+    agent: "gemini-cli" | "aider";
+    targetRelativePath: ".geminiignore" | ".aiderignore";
+    label: string;
+  },
+): void {
+  const key = `${options.agent}:${options.targetRelativePath}:${pattern}`;
+  const existing = actionsByKey.get(key);
+  if (existing) {
+    if (!existing.findingIds.includes(finding.id)) {
+      existing.findingIds.push(finding.id);
+    }
+    return;
+  }
+
+  actionsByKey.set(key, {
+    id: key,
+    kind: "append-ignore-pattern",
+    agent: options.agent,
+    targetRelativePath: options.targetRelativePath,
+    pattern,
+    evidencePath,
+    findingIds: [finding.id],
+    description: `Exclude ${evidencePath} from ${options.label} via ${options.targetRelativePath}`,
+  });
+}
+
+/** Patterns that would be newly appended given current ignore-file contents. */
+export function missingPatternsForIgnoreFile(
   currentContent: string | null,
   patterns: string[],
 ): string[] {
@@ -292,3 +413,6 @@ export function missingPatternsForCursorignore(
   }
   return missing;
 }
+
+/** @deprecated Prefer missingPatternsForIgnoreFile */
+export const missingPatternsForCursorignore = missingPatternsForIgnoreFile;

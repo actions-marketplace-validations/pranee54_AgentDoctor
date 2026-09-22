@@ -33,7 +33,15 @@ describe("policy performance", () => {
         compatibility: 80,
         performance: 90,
       },
-      agents: { cursor: 40, "claude-code": 40, codex: 40 },
+      agents: {
+        cursor: 40,
+        "claude-code": 40,
+        codex: 40,
+        copilot: 40,
+        windsurf: 40,
+        "gemini-cli": 40,
+        aider: 40,
+      },
     };
 
     const started = performance.now();

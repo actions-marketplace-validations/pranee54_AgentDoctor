@@ -5,6 +5,8 @@ import { createIgnoreIndex, parseIgnoreFile, relativizeIgnorePatterns } from "./
 import { TextCache } from "./text-cache.js";
 import type { RuleContext } from "./types.js";
 
+const ROOT_IGNORE_FILES = new Set([".gitignore", ".cursorignore", ".geminiignore", ".aiderignore"]);
+
 export async function buildRuleContext(options: {
   root: string;
   repository: RepositoryInfo;
@@ -16,6 +18,8 @@ export async function buildRuleContext(options: {
 
   const gitignorePatterns: string[] = [];
   const cursorignorePatterns: string[] = [];
+  const geminiignorePatterns: string[] = [];
+  const aiderignorePatterns: string[] = [];
 
   const rootGitignore = await textCache.read(".gitignore");
   if (rootGitignore.text) {
@@ -27,12 +31,22 @@ export async function buildRuleContext(options: {
     cursorignorePatterns.push(...parseIgnoreFile(rootCursorignore.text));
   }
 
+  const rootGeminiignore = await textCache.read(".geminiignore");
+  if (rootGeminiignore.text) {
+    geminiignorePatterns.push(...parseIgnoreFile(rootGeminiignore.text));
+  }
+
+  const rootAiderignore = await textCache.read(".aiderignore");
+  if (rootAiderignore.text) {
+    aiderignorePatterns.push(...parseIgnoreFile(rootAiderignore.text));
+  }
+
   for (const file of options.discovery.files) {
     const base = file.relativePath.split("/").pop() ?? file.relativePath;
-    if (base !== ".gitignore" && base !== ".cursorignore") {
+    if (!ROOT_IGNORE_FILES.has(base)) {
       continue;
     }
-    if (file.relativePath === ".gitignore" || file.relativePath === ".cursorignore") {
+    if (ROOT_IGNORE_FILES.has(file.relativePath)) {
       continue;
     }
 
@@ -46,14 +60,20 @@ export async function buildRuleContext(options: {
     const patterns = relativizeIgnorePatterns(dir, parseIgnoreFile(cached.text));
     if (base === ".gitignore") {
       gitignorePatterns.push(...patterns);
-    } else {
+    } else if (base === ".cursorignore") {
       cursorignorePatterns.push(...patterns);
+    } else if (base === ".geminiignore") {
+      geminiignorePatterns.push(...patterns);
+    } else if (base === ".aiderignore") {
+      aiderignorePatterns.push(...patterns);
     }
   }
 
   const ignore = createIgnoreIndex({
     gitignorePatterns,
     cursorignorePatterns,
+    geminiignorePatterns,
+    aiderignorePatterns,
   });
 
   const mcp = await parseProjectMcpConfigs(options.root, options.maxFileSizeBytes);

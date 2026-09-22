@@ -69,3 +69,10 @@ validation/mcp-agent/results.json
 # Local-only internal docs / notes (never publish)
 .private/
 AgentDoctorOS/
+
+# Release / local pack artifacts
+*.tgz
+praneeth_54-agentdoctor-*.tgz
+
+# Generated local perf snapshots (regenerate via scripts/perf/ast-graph.mjs)
+benchmarks/ast-graph-perf-latest.json

@@ -74,6 +74,31 @@ function agentsWithoutClearExclusion(context: RuleContext, relativePath: string)
 
     if (agent.id === "codex") {
       affected.push("codex");
+      continue;
+    }
+
+    if (agent.id === "copilot") {
+      // No official project-local Copilot deny/ignore file; treat as exposed when present.
+      affected.push("copilot");
+      continue;
+    }
+
+    if (agent.id === "windsurf") {
+      affected.push("windsurf");
+      continue;
+    }
+
+    if (agent.id === "gemini-cli") {
+      if (!context.ignore.isExcludedForGemini(relativePath)) {
+        affected.push("gemini-cli");
+      }
+      continue;
+    }
+
+    if (agent.id === "aider") {
+      if (!context.ignore.isExcludedForAider(relativePath)) {
+        affected.push("aider");
+      }
     }
   }
 
@@ -117,7 +142,7 @@ export const envFileExposureRule: RuleDefinition = {
           title: "Sensitive environment file present in repository",
           message: `Sensitive environment file present in the repository: ${file.relativePath}`,
           whyItMatters:
-            "No supported coding-agent configuration was detected, so agent-specific exposure was not asserted. The file is still high-risk repository material if tracked or shared.",
+            "No supported coding-agent configuration was detected, so agent-specific exposure was not asserted. Repository hygiene still applies: the file is high-risk if tracked or shared.",
           recommendation:
             "Keep runtime environment files out of version control and rotate credentials if the file may have been shared.",
           affectedAgents: [],
@@ -157,7 +182,7 @@ export const envFileExposureRule: RuleDefinition = {
         whyItMatters:
           "Environment files frequently hold API keys and credentials. If readable by an AI coding agent, those values may be included in prompts or logs.",
         recommendation:
-          "Add an agent-specific exclusion (for example .cursorignore, a Claude Code Read deny rule, or a Codex filesystem deny), keep the file out of version control, and rotate any credentials that may have been exposed.",
+          "Add an agent-specific exclusion (for example .cursorignore, a Claude Code Read deny rule, a Codex filesystem deny, .geminiignore, or .aiderignore), keep the file out of version control, and rotate any credentials that may have been exposed.",
         affectedAgents: affected,
         evidence: {
           path: file.relativePath,
