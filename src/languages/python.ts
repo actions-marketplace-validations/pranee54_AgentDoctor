@@ -7,13 +7,45 @@ function sid(kind: string, key: string): string {
   return `${kind}:${createHash("sha256").update(key).digest("hex").slice(0, 12)}`;
 }
 
+const PYTHON_PROBE_TIMEOUT_MS = 5_000;
+
 /**
- * Real Python AST via the CPython `ast` module (requires `python3` on PATH).
- * Not regex. If python3 is missing, capabilities are unsupported.
+ * Prefer real interpreters; skip hanging Windows Store `python3` stubs via timeout.
+ */
+function pythonCandidates(): string[] {
+  return process.platform === "win32"
+    ? ["python", "py", "python3"]
+    : ["python3", "python"];
+}
+
+let cachedPythonBin: string | null | undefined;
+
+/**
+ * Resolve a working CPython binary, or null if none responds in time.
+ */
+export function resolvePythonBin(): string | null {
+  if (cachedPythonBin !== undefined) return cachedPythonBin;
+  for (const bin of pythonCandidates()) {
+    const r = spawnSync(bin, ["-c", "import ast, json"], {
+      encoding: "utf8",
+      timeout: PYTHON_PROBE_TIMEOUT_MS,
+      windowsHide: true,
+    });
+    if (r.status === 0 && !r.error) {
+      cachedPythonBin = bin;
+      return bin;
+    }
+  }
+  cachedPythonBin = null;
+  return null;
+}
+
+/**
+ * Real Python AST via the CPython `ast` module (requires python on PATH).
+ * Not regex. If no interpreter is available, capabilities are unsupported.
  */
 export function pythonAvailable(): boolean {
-  const r = spawnSync("python3", ["-c", "import ast, json"], { encoding: "utf8" });
-  return r.status === 0;
+  return resolvePythonBin() !== null;
 }
 
 const PY_EXTRACTOR = `
@@ -65,7 +97,8 @@ export const pythonAdapter: LanguageAdapter = {
     };
   },
   async parse(filePath, source) {
-    if (!pythonAvailable()) {
+    const pythonBin = resolvePythonBin();
+    if (!pythonBin) {
       return {
         language: "python",
         file: filePath,
@@ -74,14 +107,16 @@ export const pythonAdapter: LanguageAdapter = {
         symbols: [],
         imports: [],
         calls: [],
-        diagnostics: ["python3 not available on PATH"],
-        limitations: ["Python AST adapter requires python3 with stdlib ast module"],
+        diagnostics: ["python not available on PATH"],
+        limitations: ["Python AST adapter requires python3/python with stdlib ast module"],
       };
     }
-    const r = spawnSync("python3", ["-c", PY_EXTRACTOR, filePath], {
+    const r = spawnSync(pythonBin, ["-c", PY_EXTRACTOR, filePath], {
       input: source,
       encoding: "utf8",
       maxBuffer: 8 * 1024 * 1024,
+      timeout: 15_000,
+      windowsHide: true,
     });
     if (r.status !== 0 || !r.stdout) {
       return {
@@ -92,7 +127,7 @@ export const pythonAdapter: LanguageAdapter = {
         symbols: [],
         imports: [],
         calls: [],
-        diagnostics: [r.stderr || "python3 extractor failed"],
+        diagnostics: [r.stderr || r.error?.message || "python extractor failed"],
         limitations: [],
       };
     }

@@ -4,7 +4,7 @@ import { execFile, spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { realpathSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 
 import type { PolicyDecisionContract } from "../contracts/index.js";
 import { evaluateAgentAction, EVALUATE_ONLY } from "../platform/firewall/evaluate.js";
@@ -13,6 +13,47 @@ import { resolveRepoRoot } from "../utils/path.js";
 import { PathEscapeError, assertInsideRepo } from "../security/paths.js";
 
 const execFileAsync = promisify(execFile);
+
+/**
+ * Resolve npm/npx to `node <cli.js>` on Windows so execFile(shell:false) does not
+ * hit ENOENT on the `npm` name or fail to spawn `.cmd` shims without a shell.
+ */
+function resolveNpmCliJs(cliFile: "npm-cli.js" | "npx-cli.js"): string | null {
+  const candidates = [
+    path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", cliFile),
+    path.join(
+      path.dirname(process.execPath),
+      "..",
+      "lib",
+      "node_modules",
+      "npm",
+      "bin",
+      cliFile,
+    ),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+/**
+ * Map argv to a portable executable form for shell:false execution.
+ * Policy evaluation still uses the original human-facing argv/command string.
+ */
+export function resolveExecutableArgv(argv: string[]): string[] {
+  if (argv.length === 0) return argv;
+  const bin = argv[0]!;
+  if (process.platform === "win32" && (bin === "npm" || bin === "npx")) {
+    const cli = resolveNpmCliJs(bin === "npx" ? "npx-cli.js" : "npm-cli.js");
+    if (cli) {
+      return [process.execPath, cli, ...argv.slice(1)];
+    }
+    // Last resort: .cmd name (may still require shell on some hosts).
+    return [`${bin}.cmd`, ...argv.slice(1)];
+  }
+  return argv;
+}
 
 export type ExecutionStatus =
   "executed" | "blocked-by-enforcement" | "not-executed" | "execution-failed";
@@ -31,7 +72,18 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_BUFFER = 1024 * 1024;
 const OUTPUT_TRUNCATE = 32_768;
 
-const ENV_ALLOWLIST = new Set(["PATH", "NODE_ENV", "HOME", "LANG"]);
+const ENV_ALLOWLIST = new Set([
+  "PATH",
+  "Path",
+  "NODE_ENV",
+  "HOME",
+  "USERPROFILE",
+  "LANG",
+  "SystemRoot",
+  "SYSTEMROOT",
+  "ComSpec",
+  "PATHEXT",
+]);
 
 /**
  * Parse a command string into argv without invoking a shell.
@@ -226,7 +278,8 @@ async function executeArgv(options: {
     });
   }
 
-  const [file, ...args] = options.argv;
+  const resolved = resolveExecutableArgv(options.argv);
+  const [file, ...args] = resolved;
   if (!file) {
     return {
       stdout: "",
@@ -238,6 +291,10 @@ async function executeArgv(options: {
     };
   }
 
+  // Windows .cmd shims cannot be execFile'd with shell:false; use shell only then.
+  const needsWindowsCmdShell =
+    process.platform === "win32" && /\.(cmd|bat)$/i.test(file);
+
   try {
     const result = await execFileAsync(file, args, {
       cwd,
@@ -245,7 +302,7 @@ async function executeArgv(options: {
       timeout: options.timeoutMs,
       maxBuffer: options.maxBuffer,
       windowsHide: true,
-      shell: false,
+      shell: needsWindowsCmdShell,
     });
     return {
       stdout: truncate(typeof result.stdout === "string" ? result.stdout : String(result.stdout)),

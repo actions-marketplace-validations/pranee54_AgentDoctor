@@ -37,6 +37,18 @@ describe("controlled runner", () => {
     expect(parseArgv(`echo "hello world"`)).toEqual(["echo", "hello world"]);
   });
 
+  it("resolves npm to node npm-cli.js on Windows", async () => {
+    const { resolveExecutableArgv } = await import("../../../src/enforcement/runner.js");
+    const resolved = resolveExecutableArgv(["npm", "--version"]);
+    if (process.platform === "win32") {
+      expect(resolved[0]).toBe(process.execPath);
+      expect(resolved[1]).toMatch(/npm-cli\.js$/i);
+      expect(resolved.slice(2)).toEqual(["--version"]);
+    } else {
+      expect(resolved).toEqual(["npm", "--version"]);
+    }
+  });
+
   it("rejects path escape outside root", async () => {
     const root = await repoWithAllowlist(["npm --version"]);
     expect(() => assertArgsInsideRoot(["../../etc/passwd"], root)).toThrow(/path escape/);

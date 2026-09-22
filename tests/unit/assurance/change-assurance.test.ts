@@ -75,7 +75,9 @@ describe("change assurance", () => {
       const { assessment, manifest } = await verifyChange({ root });
       expect(assessment.verificationStatus).toBe("evidence-produced");
       expect(manifest.files.length).toBeGreaterThan(5);
-      expect(assessment.evidence.directory).toContain(".agentdoctor/evidence/");
+      expect(assessment.evidence.directory?.split(path.sep).join("/")).toContain(
+        ".agentdoctor/evidence/",
+      );
 
       const inspected = await inspectEvidence({ root, changeId: assessment.changeId });
       expect(inspected.ok).toBe(true);
