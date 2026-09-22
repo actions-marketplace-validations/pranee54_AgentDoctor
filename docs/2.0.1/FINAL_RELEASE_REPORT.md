@@ -82,15 +82,15 @@ npm view @praneeth_54/agentdoctor version   # expect 2.0.1 (may lag briefly)
 
 ## GitHub
 
-| Item                         | Status                                                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Remote `main` at release SHA | YES (`c73436a`)                                                                                              |
-| Remote tag `v2.0.1`          | YES                                                                                                          |
-| GitHub Release               | **YES** — https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.1                                        |
-| CI on release push           | **FAILURE** — https://github.com/pranee54/AgentDoctor/actions/runs/35779240600                               |
-| CI failure cause             | `Cannot find module './coverage/load.js'` because `src/coverage/` was ignored by `coverage/` in `.gitignore` |
-| CodeQL                       | in progress / not used as success claim                                                                      |
-| Marketplace                  | **MANUAL ACTION REQUIRED** (unchanged)                                                                       |
+| Item                         | Status                                                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Remote `main` at release SHA | Release tag on `c73436a`; HEAD later advanced (coverage + docs)                                          |
+| Remote tag `v2.0.1`          | YES                                                                                                      |
+| GitHub Release               | **YES** — https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.1                                    |
+| CI on tagged release push    | **FAILURE** — https://github.com/pranee54/AgentDoctor/actions/runs/35779240600 (missing `src/coverage/`) |
+| CI after coverage fix (HEAD) | Ubuntu **PASS**; Windows **FAIL** — https://github.com/pranee54/AgentDoctor/actions/runs/35779875769     |
+| Windows failure themes       | path separators in evidence paths; `spawn npm ENOENT`; MCP/assurance timeouts (8 failed / 451)           |
+| Marketplace                  | **MANUAL ACTION REQUIRED** (unchanged)                                                                   |
 
 ## Known limitations (preserved)
 
@@ -107,9 +107,9 @@ See: [limitations.md](limitations.md) · [FINAL_COMPLETION_AUDIT.md](FINAL_COMPL
 
 ## Remaining items
 
-1. Human `npm publish --otp=<code>` for `@praneeth_54/agentdoctor@2.0.1` from HEAD (after coverage fix).
+1. Human `npm publish --otp=<code>` for `@praneeth_54/agentdoctor@2.0.1` from HEAD (after coverage fix `7105f10+`).
 2. Registry confirm + clean install smoke under `/tmp/agentdoctor-2.0.1-published-verification`.
-3. Confirm CI green on follow-up commit that adds `src/coverage/`.
+3. Windows CI matrix still red (path / `npm` spawn / timeouts) — out of release-OTP scope; needs a follow-up hardening PR.
 4. Optional: Marketplace UI listing.
 5. Optional later: annotated tag alignment / patch if consumers need tag SHA == full tree (no force-move in this session).
 
@@ -117,4 +117,4 @@ See: [limitations.md](limitations.md) · [FINAL_COMPLETION_AUDIT.md](FINAL_COMPL
 
 # AGENTDOCTOR 2.0.1 — RELEASE PARTIALLY VERIFIED
 
-Git commit, tag, push, and GitHub Release succeeded. Local verify passed (70/451). npm publish blocked on OTP; published clean-install / CLI / MCP gates not run. CI failed on the tagged commit due to missing gitignored `src/coverage/` (fixed in follow-up commit; tag left on `c73436a` without force).
+Git commit, tag, push, and GitHub Release succeeded. Local verify passed (70/451). Ubuntu CI green after coverage fix; Windows matrix still failing. npm publish blocked on OTP; published clean-install / CLI / MCP gates not run. Tag `v2.0.1` left on `c73436a` without force.
