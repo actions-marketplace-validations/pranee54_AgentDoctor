@@ -87,6 +87,9 @@ export async function buildIntelligenceGraph(options: {
     const nodes: GraphNode[] = [];
     const edges: GraphEdge[] = [];
     const seen = new Set<string>();
+    // TypeScript uses `/` on Windows; path.join uses `\`. Normalize before matching.
+    const normalizeFsPath = (p: string): string => path.normalize(p).toLowerCase();
+    const fileSet = new Set(files.map(normalizeFsPath));
 
     const pushNode = (n: GraphNode) => {
       if (seen.has(n.id)) return;
@@ -96,7 +99,7 @@ export async function buildIntelligenceGraph(options: {
 
     for (const sf of program.getSourceFiles()) {
       if (sf.isDeclarationFile) continue;
-      if (!files.includes(sf.fileName)) continue;
+      if (!fileSet.has(normalizeFsPath(sf.fileName))) continue;
       const rel = toPosixRelative(root, sf.fileName);
       const fileId = nodeId("file", rel);
       pushNode({ id: fileId, kind: "file", label: path.basename(rel), path: rel });

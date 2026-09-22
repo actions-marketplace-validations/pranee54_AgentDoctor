@@ -53,6 +53,9 @@ validation/real-world/history/*
 
 # Local Project Brain state (generated snapshots under .agentdoctor/project-brain/)
 .agentdoctor/
+# Keep committed plugin fixtures for CI (discoverPlugins / runPluginAnalyzers)
+!fixtures/**/.agentdoctor/
+!fixtures/**/.agentdoctor/**
 
 # Local Cursor IDE / MCP config (machine-absolute paths; never publish)
 .cursor/
