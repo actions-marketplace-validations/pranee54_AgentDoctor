@@ -23,15 +23,11 @@ describe("intelligence MCP + policy packs + ops", () => {
     }
   });
 
-  it(
-    "repo_overview returns structured result",
-    async () => {
-      const { structured, isError } = await invokeIntelligenceMcpTool(repoRoot, "repo_overview", {});
-      expect(isError).toBe(false);
-      expect(structured).toMatchObject({ ok: true });
-    },
-    30_000,
-  );
+  it("repo_overview returns structured result", async () => {
+    const { structured, isError } = await invokeIntelligenceMcpTool(repoRoot, "repo_overview", {});
+    expect(isError).toBe(false);
+    expect(structured).toMatchObject({ ok: true });
+  }, 30_000);
 
   it("policy_evaluate never claims execution", async () => {
     const { structured, isError } = await invokeIntelligenceMcpTool(repoRoot, "policy_evaluate", {

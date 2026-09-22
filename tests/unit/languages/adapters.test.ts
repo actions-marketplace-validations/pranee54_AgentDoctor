@@ -23,28 +23,24 @@ export class Foo {}
     expect(result.calls.length).toBeGreaterThan(0);
   });
 
-  it(
-    "parses Python via CPython ast when python3 available",
-    async () => {
-      const caps = pythonAdapter.capabilities();
-      if (caps.parse !== "supported") {
-        expect(caps.parse).toBe("unsupported");
-        return;
-      }
-      const src = `
+  it("parses Python via CPython ast when python3 available", async () => {
+    const caps = pythonAdapter.capabilities();
+    if (caps.parse !== "supported") {
+      expect(caps.parse).toBe("unsupported");
+      return;
+    }
+    const src = `
 import os
 def greet(name):
     return os.path.join(name)
 class Box:
     pass
 `;
-      const result = await pythonAdapter.parse("app.py", src);
-      expect(result.ok).toBe(true);
-      expect(result.symbols.some((s) => s.name === "greet" && s.evidence === "ast")).toBe(true);
-      expect(result.imports.some((i) => i.specifier === "os")).toBe(true);
-    },
-    20_000,
-  );
+    const result = await pythonAdapter.parse("app.py", src);
+    expect(result.ok).toBe(true);
+    expect(result.symbols.some((s) => s.name === "greet" && s.evidence === "ast")).toBe(true);
+    expect(result.imports.some((i) => i.specifier === "os")).toBe(true);
+  }, 20_000);
 
   it("parses PHP via token_get_all when php available", async () => {
     const caps = phpAdapter.capabilities();

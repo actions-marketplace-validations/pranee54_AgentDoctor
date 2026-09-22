@@ -13,9 +13,7 @@ const PYTHON_PROBE_TIMEOUT_MS = 5_000;
  * Prefer real interpreters; skip hanging Windows Store `python3` stubs via timeout.
  */
 function pythonCandidates(): string[] {
-  return process.platform === "win32"
-    ? ["python", "py", "python3"]
-    : ["python3", "python"];
+  return process.platform === "win32" ? ["python", "py", "python3"] : ["python3", "python"];
 }
 
 let cachedPythonBin: string | null | undefined;

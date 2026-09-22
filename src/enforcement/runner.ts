@@ -21,15 +21,7 @@ const execFileAsync = promisify(execFile);
 function resolveNpmCliJs(cliFile: "npm-cli.js" | "npx-cli.js"): string | null {
   const candidates = [
     path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", cliFile),
-    path.join(
-      path.dirname(process.execPath),
-      "..",
-      "lib",
-      "node_modules",
-      "npm",
-      "bin",
-      cliFile,
-    ),
+    path.join(path.dirname(process.execPath), "..", "lib", "node_modules", "npm", "bin", cliFile),
   ];
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;
@@ -292,8 +284,7 @@ async function executeArgv(options: {
   }
 
   // Windows .cmd shims cannot be execFile'd with shell:false; use shell only then.
-  const needsWindowsCmdShell =
-    process.platform === "win32" && /\.(cmd|bat)$/i.test(file);
+  const needsWindowsCmdShell = process.platform === "win32" && /\.(cmd|bat)$/i.test(file);
 
   try {
     const result = await execFileAsync(file, args, {
