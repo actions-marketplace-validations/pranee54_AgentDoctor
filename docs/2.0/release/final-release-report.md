@@ -2,8 +2,9 @@
 
 **Date:** 2026-09-22  
 **Branch:** `main`  
-**Commit:** `c8b6681` — `release: AgentDoctor 2.0.0`  
-**Tag:** `v2.0.0` (annotated)
+**Release commit:** `c8b6681` — `release: AgentDoctor 2.0.0`  
+**Tag:** `v2.0.0` (annotated)  
+**Follow-up docs commits:** `6035d0f`, `0b9670a`
 
 ---
 
@@ -14,13 +15,14 @@
 | Final version     | **2.0.0**                                                                                                        |
 | npm package       | `@praneeth_54/agentdoctor`                                                                                       |
 | Description       | Codebase intelligence, repository analysis, safety controls, and MCP tools for developers and engineering teams. |
-| Local pack size   | **268.1 kB** / **496** files / **1.1 MB** unpacked                                                               |
-| Tests             | **53** files / **394** tests — `npm run verify` PASS                                                             |
+| Package size      | **268.1 kB** / **496** files / **1.1 MB** unpacked                                                               |
+| Tests             | **53** files / **394** tests — PASS                                                                              |
 | GitHub repository | https://github.com/pranee54/AgentDoctor                                                                          |
 | GitHub Release    | https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.0                                                      |
+| npm URL           | https://www.npmjs.com/package/@praneeth_54/agentdoctor                                                           |
 | Action default    | `action.yml` → `version: 2.0.0`                                                                                  |
-| npm published     | **BLOCKED** — registry PUT returned 404/unauthorized (token present but not accepted for publish)                |
-| Marketplace       | **MANUAL ACTION REQUIRED**                                                                                       |
+| npm published     | **YES** — `latest` = **2.0.0**                                                                                   |
+| Marketplace       | **MANUAL ACTION REQUIRED** (GitHub UI)                                                                           |
 
 ---
 
@@ -34,15 +36,14 @@
 
 ## Quality
 
-| Check                               | Result                               |
-| ----------------------------------- | ------------------------------------ |
-| `npm run verify`                    | PASS                                 |
-| `npm pack`                          | PASS (`2.0.0`, 268.1 kB, 496 files)  |
-| Clean-install from local tarball    | PASS                                 |
-| `agentdoctor --version` / scan JSON | `2.0.0`                              |
-| `mcp` / `brain-mcp` help            | PASS                                 |
-| Secrets in release commit           | None real                            |
-| Packed README                       | Limitations + labels; no blanket 5/5 |
+| Check                              | Result                                              |
+| ---------------------------------- | --------------------------------------------------- |
+| `npm run verify`                   | PASS                                                |
+| `npm pack`                         | PASS (`2.0.0`, 268.1 kB, 496 files)                 |
+| Published clean-install            | PASS (`npm install @praneeth_54/agentdoctor@2.0.0`) |
+| Published `--version` / scan JSON  | `2.0.0`                                             |
+| Published `mcp` / `brain-mcp` help | PASS                                                |
+| Packed README                      | Limitations + labels; no blanket 5/5                |
 
 ## Packaging (Option B)
 
@@ -50,61 +51,38 @@ Tarball: `dist/` + `README.md` + `CHANGELOG.md` + `LICENSE` + `package.json` onl
 
 ## GitHub
 
-| Step                           | Status                                                                 |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| Commit pushed to `origin/main` | **DONE** (`c8b6681`)                                                   |
-| Tag `v2.0.0` pushed            | **DONE**                                                               |
-| GitHub Release created         | **DONE** — https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.0 |
+| Step                    | Status                                                                 |
+| ----------------------- | ---------------------------------------------------------------------- |
+| Commit on `origin/main` | **DONE** (`c8b6681` + docs follow-ups)                                 |
+| Tag `v2.0.0`            | **DONE**                                                               |
+| GitHub Release          | **DONE** — https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.0 |
 
 ## npm
 
-| Step                          | Status                                                                                                                                                                                                                     |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Registry latest               | Still **1.1.1** (2.0.0 not published)                                                                                                                                                                                      |
-| Maintainer on registry        | `praneeth_54 <letschat.praneeth@gmail.com>`                                                                                                                                                                                |
-| Local `npm whoami`            | **FAILED** — `401 Unauthorized`                                                                                                                                                                                            |
-| `npm publish --access public` | **FAILED** — `404 Not Found` on PUT                                                                                                                                                                                        |
-| Root cause                    | **Invalid / expired npm auth token** in `~/.npmrc`. npm often returns **404** (not 401) when a scoped publish is unauthorized. Your terminal run already proved build/verify/pack succeed; only registry auth is blocking. |
-| Published version verified    | **NOT DONE**                                                                                                                                                                                                               |
+| Step                 | Status                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| Maintainer           | `praneeth_54`                                                                              |
+| Publish              | **DONE** (`+ @praneeth_54/agentdoctor@2.0.0`; registry returned `202` then became visible) |
+| `dist-tags.latest`   | **2.0.0**                                                                                  |
+| `npm view … version` | **2.0.0**                                                                                  |
+| Published smoke      | **PASS**                                                                                   |
 
-### Manual npm publish (required)
+Note: immediately after publish, `npm view` could still show `1.1.1` for ~1–2 minutes while the package was processing. That is expected with npm’s async publish pipeline.
 
-```bash
-# 1) Re-authenticate as the package owner
-npm logout
-npm login
-# must be user: praneeth_54
-# If publish requires 2FA later: keep an authenticator ready
-
-# 2) Confirm identity
-npm whoami
-# expect: praneeth_54
-
-# 3) Publish
-cd /Applications/XAMPP/xamppfiles/htdocs/AgentDoctor
-npm publish --access public
-# with 2FA: npm publish --access public --otp=XXXXXX
-
-# 4) Verify
-npm view @praneeth_54/agentdoctor version
-# expect: 2.0.0
-```
-
-Clean-directory smoke:
+Optional cleanup (non-blocking):
 
 ```bash
-npm install @praneeth_54/agentdoctor@2.0.0
-npx agentdoctor --version
+npm pkg fix   # addresses “bin[agentdoctor] script name was cleaned” publish warning
 ```
 
 ## GitHub Action / Marketplace
 
-| Item                         | Status                                                                                                                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `action.yml` default `2.0.0` | DONE in tree/tag                                                                                                                                           |
-| CI matrix pins `2.0.0`       | DONE (Action smoke needs published npm 2.0.0)                                                                                                              |
-| Action reference             | `pranee54/AgentDoctor@v2.0.0`                                                                                                                              |
-| Marketplace listing          | **MANUAL ACTION REQUIRED** — use GitHub UI “Publish this Action to the GitHub Marketplace” if not already listed; do not claim published until UI confirms |
+| Item                         | Status                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `action.yml` default `2.0.0` | DONE                                                                                                         |
+| CI matrix pins `2.0.0`       | DONE (published package now available)                                                                       |
+| Action reference             | `pranee54/AgentDoctor@v2.0.0`                                                                                |
+| Marketplace listing          | **MANUAL ACTION REQUIRED** — GitHub UI “Publish this Action to the GitHub Marketplace” if not already listed |
 
 ## Known limitations
 
@@ -112,16 +90,15 @@ Unchanged honesty: TS/JS AST focus, heuristic test-impact, inferred C4, evaluate
 
 ## Remaining manual actions
 
-1. **npm login + publish** as `praneeth_54`.
-2. Verify published package install/smoke.
-3. Confirm GitHub Marketplace listing / update if needed.
-4. Re-check CI Action smoke jobs after npm 2.0.0 is live.
+1. Confirm GitHub Marketplace listing in the GitHub UI (if desired).
+2. Optional: run `npm pkg fix` and ship a tiny follow-up if you want a clean publish warning log next time.
+3. Watch CI Action smoke jobs now that `2.0.0` is on the registry.
 
 ## Final status
 
-| Gate                               | Status           |
-| ---------------------------------- | ---------------- |
-| Repository clean (local)           | YES              |
-| GitHub commit/tag/release verified | YES              |
-| npm verified                       | **NO — BLOCKED** |
-| Marketplace verified               | **NO — MANUAL**  |
+| Gate                               | Status          |
+| ---------------------------------- | --------------- |
+| Repository clean (local)           | YES             |
+| GitHub commit/tag/release verified | YES             |
+| npm verified                       | **YES**         |
+| Marketplace verified               | **NO — MANUAL** |
