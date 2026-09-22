@@ -58,24 +58,39 @@ Tarball: `dist/` + `README.md` + `CHANGELOG.md` + `LICENSE` + `package.json` onl
 
 ## npm
 
-| Step                          | Status                                                                                           |
-| ----------------------------- | ------------------------------------------------------------------------------------------------ |
-| Registry already has 2.0.0?   | No (404 on view)                                                                                 |
-| `npm publish --access public` | **FAILED** — `404 Not Found` on PUT (typical when auth is invalid/expired for the package owner) |
-| Published version verified    | **NOT DONE**                                                                                     |
+| Step                          | Status                                                                                                                                                                                                                     |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registry latest               | Still **1.1.1** (2.0.0 not published)                                                                                                                                                                                      |
+| Maintainer on registry        | `praneeth_54 <letschat.praneeth@gmail.com>`                                                                                                                                                                                |
+| Local `npm whoami`            | **FAILED** — `401 Unauthorized`                                                                                                                                                                                            |
+| `npm publish --access public` | **FAILED** — `404 Not Found` on PUT                                                                                                                                                                                        |
+| Root cause                    | **Invalid / expired npm auth token** in `~/.npmrc`. npm often returns **404** (not 401) when a scoped publish is unauthorized. Your terminal run already proved build/verify/pack succeed; only registry auth is blocking. |
+| Published version verified    | **NOT DONE**                                                                                                                                                                                                               |
 
 ### Manual npm publish (required)
 
-As package maintainer `praneeth_54`:
-
 ```bash
+# 1) Re-authenticate as the package owner
+npm logout
 npm login
-cd /path/to/AgentDoctor   # at c8b6681 / v2.0.0
+# must be user: praneeth_54
+# If publish requires 2FA later: keep an authenticator ready
+
+# 2) Confirm identity
+npm whoami
+# expect: praneeth_54
+
+# 3) Publish
+cd /Applications/XAMPP/xamppfiles/htdocs/AgentDoctor
 npm publish --access public
-npm view @praneeth_54/agentdoctor version   # expect 2.0.0
+# with 2FA: npm publish --access public --otp=XXXXXX
+
+# 4) Verify
+npm view @praneeth_54/agentdoctor version
+# expect: 2.0.0
 ```
 
-Then smoke from a clean directory:
+Clean-directory smoke:
 
 ```bash
 npm install @praneeth_54/agentdoctor@2.0.0
