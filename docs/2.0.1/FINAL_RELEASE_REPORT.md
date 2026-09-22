@@ -12,7 +12,8 @@ GitHub Release: https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.1
 Follow-up (post-tag, required for CI / complete tree):
 
 - Coverage sources were locally present but **gitignored** by a broad `coverage/` rule, so `src/coverage/*` and `tests/unit/coverage/parsers.test.ts` were **not** in `c73436a`.
-- Fixed by narrowing ignore to `/coverage/` and committing those files (see git log after this report).
+- Fixed in `7105f101ca94ca01c9cab560fdf7019dd6ba9df8` — `fix: track src/coverage ignored by broad gitignore` (ignore narrowed to `/coverage/`).
+- This report recorded in `6d409992a2cd90dc1171c4c271399ea279af703c` (and any later docs-only amend commits).
 - **Do not force-move `v2.0.1`.** Publish npm from HEAD after the coverage fix, not from a bare tag checkout of `c73436a`.
 
 ## Pre-release verification (local)
