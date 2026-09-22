@@ -45,4 +45,4 @@ Secure secrets via environment / mounted files — never bake credentials into i
 
 ## Upgrades
 
-Current release: **2.0.0**. Follow [migration.md](migration.md) for store/API additive changes.
+Current release: **2.0.1** (local/RC; npm may still show 2.0.0 until published). Follow [migration.md](migration.md) for store/API additive changes.

@@ -1,7 +1,7 @@
 # AgentDoctor v2.0 — Feature Guide
 
-Package version: **2.0.0**.
-Feature work toward **2.0.0** is implemented locally-first.
+Package version: **2.0.1**.
+Feature work for the 2.0 line is implemented locally-first.
 
 ## New CLI commands
 

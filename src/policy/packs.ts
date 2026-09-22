@@ -23,10 +23,42 @@ export const POLICY_PACKS: Record<string, FirewallPolicyDocument> = {
       {
         id: "pack-block-destructive",
         actionTypes: ["shell"],
-        match: { commandContains: ["rm -rf", "git push --force", "drop table"] },
+        // Force-push is gated as require-approval (human gate), not a hard block —
+        // builtin shell blocks already cover rm -rf; keep drop table here.
+        match: { commandContains: ["rm -rf", "drop table"] },
         decision: "block",
         reason: "baseline-safe: destructive operation",
         riskLevel: "critical",
+      },
+      {
+        id: "pack-force-push-approval",
+        actionTypes: ["shell"],
+        match: { commandContains: ["git push --force", "git push -f"] },
+        decision: "require-approval",
+        reason: "baseline-safe: force-push requires approval",
+        riskLevel: "high",
+      },
+      {
+        id: "pack-allow-safe-dev-paths",
+        actionTypes: ["file-modify", "file-create"],
+        match: { pathPrefix: ["src/", "tests/", "docs/"] },
+        decision: "allow",
+        reason: "baseline-safe: allowlisted development paths",
+        riskLevel: "low",
+      },
+      {
+        id: "pack-deny-prod-deploy",
+        actionTypes: ["deploy", "infra"],
+        decision: "block",
+        reason: "baseline-safe: production/infra changes require out-of-band process",
+        riskLevel: "critical",
+      },
+      {
+        id: "pack-network-default-deny",
+        actionTypes: ["network"],
+        decision: "deny-network",
+        reason: "baseline-safe: network access denied by default",
+        riskLevel: "high",
       },
     ],
   },

@@ -9,6 +9,7 @@ import type {
   PlatformSeverity,
 } from "../types.js";
 import { resolveRepoRoot } from "../../utils/path.js";
+import { composePolicy } from "../../policy/compose.js";
 
 export interface FirewallPolicyRule {
   id: string;
@@ -39,8 +40,9 @@ export interface FirewallPolicyDocument {
 
 export interface PolicyLoadResult {
   policy: FirewallPolicyDocument;
-  source: "file" | "default" | "fail-closed-deny";
+  source: "file" | "default" | "fail-closed-deny" | "composed";
   validationError?: string;
+  composeSources?: Array<"builtin" | "repo">;
 }
 
 const EVALUATE_ONLY = "Evaluate-only: no commands are executed and no agents are intercepted.";
@@ -49,7 +51,16 @@ const DEFAULT_POLICY: FirewallPolicyDocument = {
   version: "2.0",
   defaultDecision: "require-approval",
   failClosed: false,
-  shellAllowlist: ["npm test", "npm run test", "vitest", "eslint", "tsc", "prettier"],
+  shellAllowlist: [
+    "npm test",
+    "npm run test",
+    "npm --version",
+    "npm -v",
+    "vitest",
+    "eslint",
+    "tsc",
+    "prettier",
+  ],
   rules: [
     {
       id: "block-secret-paths",
@@ -215,14 +226,26 @@ function denyAllPolicy(reason: string): FirewallPolicyDocument {
 
 /**
  * Load local action-policy document.
- * Invalid file + failClosed (file flag or option) → deny-all.
- * Invalid file + default → documented fallback DEFAULT_POLICY.
+ * Layers: composed builtin pack + `.agentdoctor/policy.json` (fail-closed on malformed repo policy),
+ * then optional platform `firewall-policy.json` overlay (highest precedence when valid).
+ * Invalid platform file + failClosed → deny-all.
+ * Invalid platform file + default → composed policy (or DEFAULT_POLICY when compose unavailable).
  */
 export async function loadFirewallPolicy(
   root: string,
   options?: { failClosed?: boolean },
 ): Promise<PolicyLoadResult> {
   const resolved = resolveRepoRoot(root);
+  const composed = await composePolicy({ root: resolved });
+  if (composed.validationError && composed.failClosed) {
+    return {
+      policy: composed.policy,
+      source: "fail-closed-deny",
+      validationError: composed.validationError,
+      composeSources: composed.sources,
+    };
+  }
+
   const file = path.join(platformDir(resolved), "firewall-policy.json");
   try {
     const raw = await fs.readFile(file, "utf8");
@@ -230,19 +253,20 @@ export async function loadFirewallPolicy(
     try {
       parsed = JSON.parse(raw);
     } catch {
-      const failClosed = options?.failClosed === true;
+      const failClosed = options?.failClosed === true || composed.failClosed;
       if (failClosed) {
         return {
           policy: denyAllPolicy("Malformed policy JSON; fail-closed deny"),
           source: "fail-closed-deny",
           validationError: "Malformed JSON",
+          composeSources: composed.sources,
         };
       }
-      await writeJsonArtifact(resolved, "firewall-policy.json", DEFAULT_POLICY);
       return {
-        policy: DEFAULT_POLICY,
-        source: "default",
-        validationError: "Malformed JSON; wrote default policy",
+        policy: composed.policy,
+        source: "composed",
+        validationError: "Malformed platform firewall-policy.json; using composed policy",
+        composeSources: composed.sources,
       };
     }
     const validated = validateFirewallPolicy(parsed);
@@ -251,25 +275,54 @@ export async function loadFirewallPolicy(
         parsed &&
         typeof parsed === "object" &&
         (parsed as { failClosed?: unknown }).failClosed === true;
-      const failClosed = options?.failClosed === true || fileWantsFailClosed;
+      const failClosed = options?.failClosed === true || fileWantsFailClosed || composed.failClosed;
       if (failClosed) {
         return {
           policy: denyAllPolicy(`Invalid policy: ${validated.error}`),
           source: "fail-closed-deny",
           ...(validated.error ? { validationError: validated.error } : {}),
+          composeSources: composed.sources,
         };
       }
-      await writeJsonArtifact(resolved, "firewall-policy.json", DEFAULT_POLICY);
       return {
-        policy: DEFAULT_POLICY,
-        source: "default",
-        ...(validated.error ? { validationError: validated.error } : {}),
+        policy: composed.policy,
+        source: "composed",
+        ...(validated.error
+          ? { validationError: `Invalid platform policy; using composed (${validated.error})` }
+          : {}),
+        composeSources: composed.sources,
       };
     }
-    return { policy: validated.policy, source: "file" };
+    // Platform file rules first (highest precedence), then composed builtin+repo rules.
+    const merged: FirewallPolicyDocument = {
+      version: "2.0",
+      defaultDecision: validated.policy.defaultDecision,
+      failClosed: validated.policy.failClosed === true || composed.policy.failClosed === true,
+      ...(validated.policy.shellAllowlist
+        ? { shellAllowlist: validated.policy.shellAllowlist }
+        : composed.policy.shellAllowlist
+          ? { shellAllowlist: composed.policy.shellAllowlist }
+          : {}),
+      rules: [...validated.policy.rules, ...composed.policy.rules],
+    };
+    return {
+      policy: merged,
+      source: "file",
+      composeSources: composed.sources,
+    };
   } catch {
+    // No platform file: prefer repo-composed policy when `.agentdoctor/policy.json` exists.
+    // Otherwise seed DEFAULT_POLICY (includes allow-safe-dev-paths). Do not treat packName
+    // alone as a reason to skip DEFAULT_POLICY — compose always names a builtin pack.
+    if (composed.sources.includes("repo")) {
+      return {
+        policy: composed.policy,
+        source: "composed",
+        composeSources: composed.sources,
+      };
+    }
     await writeJsonArtifact(resolved, "firewall-policy.json", DEFAULT_POLICY);
-    return { policy: DEFAULT_POLICY, source: "default" };
+    return { policy: DEFAULT_POLICY, source: "default", composeSources: composed.sources };
   }
 }
 

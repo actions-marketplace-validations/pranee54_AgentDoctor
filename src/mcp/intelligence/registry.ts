@@ -1,13 +1,18 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 import {
+  handleArchitectureCheckTool,
   handleArchitectureTool,
   handleCallGraphLookup,
+  handleChangeAnalyzeTool,
   handleCodeHealthTool,
   handleCodebaseSearch,
   handleDependencyLookup,
+  handleEvidenceInspectTool,
+  handleGraphQueryTool,
   handleKnowledgeTool,
   handlePolicyEvalTool,
+  handleProofInspectTool,
   handleRefactorImpactTool,
   handleRepoOverview,
   handleSymbolLookup,
@@ -24,8 +29,13 @@ export const INTELLIGENCE_MCP_TOOL_NAMES = [
   "refactor_impact",
   "code_health",
   "architecture_info",
+  "architecture_check",
   "knowledge_retrieve",
   "policy_evaluate",
+  "change_analyze",
+  "proof_inspect",
+  "evidence_inspect",
+  "graph_query",
 ] as const;
 
 export type IntelligenceMcpToolName = (typeof INTELLIGENCE_MCP_TOOL_NAMES)[number];
@@ -111,6 +121,12 @@ export function listIntelligenceMcpTools(): Tool[] {
       inputSchema: emptyObjectSchema,
     },
     {
+      name: "architecture_check",
+      description:
+        "READ: Check import edges against .agentdoctor/architecture.json|.yml contract (repo-local).",
+      inputSchema: emptyObjectSchema,
+    },
+    {
       name: "knowledge_retrieve",
       description:
         "READ: Governed knowledge retrieval. Abstains when no approved authoritative record matches.",
@@ -128,6 +144,57 @@ export function listIntelligenceMcpTools(): Tool[] {
         type: "object",
         properties: { command: { type: "string" } },
         required: ["command"],
+        additionalProperties: false,
+      },
+    },
+    {
+      name: "change_analyze",
+      description:
+        "READ: Change assurance assessment (evidence/heuristics). Never claims verified engineering correctness.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          since: { type: "string" },
+          changeId: { type: "string" },
+          coveragePath: { type: "string", description: "Repo-relative coverage file path" },
+        },
+        additionalProperties: false,
+      },
+    },
+    {
+      name: "proof_inspect",
+      description:
+        "READ: Inspect ChangeProof by proofId or changeId (hash integrity metadata only).",
+      inputSchema: {
+        type: "object",
+        properties: { id: { type: "string" } },
+        required: ["id"],
+        additionalProperties: false,
+      },
+    },
+    {
+      name: "evidence_inspect",
+      description: "READ: Inspect change evidence bundle artifacts for a changeId.",
+      inputSchema: {
+        type: "object",
+        properties: { changeId: { type: "string" } },
+        required: ["changeId"],
+        additionalProperties: false,
+      },
+    },
+    {
+      name: "graph_query",
+      description:
+        "READ: Substring query over intelligence graph nodes/edges. Optional kind/path filters; path validated.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: { type: "string" },
+          kind: { type: "string" },
+          path: { type: "string" },
+          limit: { type: "number" },
+        },
+        required: ["query"],
         additionalProperties: false,
       },
     },
@@ -159,10 +226,20 @@ export async function invokeIntelligenceMcpTool(
         return { structured: await handleCodeHealthTool(root), isError: false };
       case "architecture_info":
         return { structured: await handleArchitectureTool(root), isError: false };
+      case "architecture_check":
+        return { structured: await handleArchitectureCheckTool(root), isError: false };
       case "knowledge_retrieve":
         return { structured: await handleKnowledgeTool(root, args), isError: false };
       case "policy_evaluate":
         return { structured: await handlePolicyEvalTool(root, args), isError: false };
+      case "change_analyze":
+        return { structured: await handleChangeAnalyzeTool(root, args), isError: false };
+      case "proof_inspect":
+        return { structured: await handleProofInspectTool(root, args), isError: false };
+      case "evidence_inspect":
+        return { structured: await handleEvidenceInspectTool(root, args), isError: false };
+      case "graph_query":
+        return { structured: await handleGraphQueryTool(root, args), isError: false };
       default:
         return {
           structured: {

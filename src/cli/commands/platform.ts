@@ -40,6 +40,8 @@ export async function runPlatformCommand(options: {
   actionType?: string;
   sessionId?: string;
   failClosed?: boolean;
+  coverage?: string;
+  since?: string;
 }): Promise<ExitCode> {
   const root = resolveRepoRoot(options.root ?? process.cwd());
   try {
@@ -73,7 +75,11 @@ export async function runPlatformCommand(options: {
         return EXIT_CODES.SUCCESS;
       }
       case "test-impact": {
-        const report = await analyzeTestImpact(root);
+        const report = await analyzeTestImpact({
+          root,
+          ...(options.coverage ? { coveragePath: options.coverage } : {}),
+          ...(options.since ? { since: options.since } : {}),
+        });
         const out = await persistTestImpactReport(root, report);
         if (options.json) printJson({ ...report, reportPath: out });
         else {

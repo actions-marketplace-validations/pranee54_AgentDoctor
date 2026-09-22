@@ -7,14 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] — 2026-09-23
+
+Hardening and change-assurance cut on top of 2.0.0, plus a deepening pass that
+closes controllable PARTIALs with honest EXTERNAL/EXPERIMENTAL gates. Canonical
+docs: [docs/2.0.1/](docs/2.0.1/README.md). Completion map:
+[docs/2.0.1/FINAL_COMPLETION_AUDIT.md](docs/2.0.1/FINAL_COMPLETION_AUDIT.md).
+
+### Added
+
+- Change assurance CLI: `agentdoctor change analyze|verify|explain|diff|status`
+  assemble repository signals into a structured `ChangeAssessment`.
+- Evidence bundles under `.agentdoctor/evidence/<change-id>/` with versioned
+  `manifest.json` and SHA-256 file hashes; `evidence inspect|verify`.
+- Change Proof CLI: `proof build|inspect|explain|verify|export` (integrity +
+  optional engineering checks; `correctnessStatus` always
+  `ENGINEERING_CORRECTNESS_NOT_CLAIMED`).
+- Architecture contract: `architecture init|analyze|check|explain`.
+- Optional coverage-backed test impact (`--coverage`) with explicit
+  `testAttribution` labels (`coverage-map` / `hybrid-heuristic` / `none`).
+- Controlled runner: `run` / `run explain` and `policy check|explain|enforce`
+  (execute only when explicitly allowed).
+- Policy composition (builtin pack + `.agentdoctor/policy.json`).
+- Incremental graph surfaces: `graph build|update|rebuild|status`.
+- Workspace isolation CLI: `workspace create|add|list|status|remove`.
+- Language adapters: Python/PHP toolchain bridges; Go honest unsupported stub;
+  Java/Kotlin/Rust/Dart unsupported stubs.
+- Storage: SQLite (`node:sqlite`) and Postgres (`tryCreatePostgresStorage`) with
+  env/runtime gates.
+- Auth library path: OIDC JWT/JWKS validation + RBAC helpers (browser OAuth
+  redirect remains experimental).
+- Combined MCP tools: `change_analyze`, `architecture_check`, `proof_inspect`,
+  `evidence_inspect`, `graph_query`.
+- Docs: `docs/2.0.1/` including FINAL_COMPLETION_AUDIT and updated limitations.
+
 ### Changed
 
-- Professional product presentation: README hero, capability map, architecture,
-  MCP / Action / security sections, and docs/2.0 index aligned to published
-  **2.0.0** (SUPPORTED / PARTIAL / EXPERIMENTAL / NOT YET SUPPORTED labels).
-- CLI program description updated to match 2.0 positioning.
-- CONTRIBUTING / ROADMAP refreshed for AgentDoctor 2.0; Change Proof documented
-  as planned design direction only.
+- Package positioning: engineering assurance for AI coding agents; description
+  and keywords updated (`change-assurance`, `evidence`, `engineering-assurance`).
+- Action default `version` input and CI published-package pins → **2.0.1**.
+- `npm run verify` builds before tests so STDIO MCP suites use fresh `dist/`.
+- Firewall load path seeds DEFAULT_POLICY when no repo policy exists; force-push
+  is `require-approval` (not hard-block via baseline pack alone).
+- README / CONTRIBUTING / ROADMAP aligned to honest status labels.
+
+### Fixed
+
+- CodeQL high alerts: crypto usage, ReDoS hardening, temp-file handling, and
+  TOCTOU fixes across secrets scan, graph/health/tokens, team auth, and related
+  tests.
+- CI Typecheck / Lint / Test / Build: track plugin fixtures previously ignored
+  under `.agentdoctor/`, and normalize TypeScript AST source paths so Windows
+  runners match discovered files.
+- Language adapter barrel exports (`pythonAvailable` / `phpAvailable` /
+  `goAvailable`) kept consistent.
+
+### Security
+
+- CodeQL-driven hardening on path/temp and regex surfaces (see Fixed).
+- Central path safety helpers; secret severity≠confidence fields.
+- Change assurance / policy path remains evaluate-only by default
+  (`executionResult: "not-executed"`); no fake full browser SSO.
+
+### Known limitations (at release)
+
+- Test impact is heuristic without coverage; hybrid when coverage lacks a test
+  map.
+- Architecture C4 impact remains **inferred**; contract is repo-local only.
+- Proof `verified` / hash integrity ≠ engineering correctness or compliance.
+- Browser OAuth incomplete (EXPERIMENTAL); Postgres needs live URL (EXTERNAL);
+  Java/Kotlin/Rust/Dart/Go AST extractors EXTERNAL; IDE interception EXTERNAL.
+- Published npm Action pins require a human `npm publish` of 2.0.1 before remote
+  CI against `version: 2.0.1` succeeds.
 
 ## [2.0.0] — 2026-09-21
 
@@ -389,7 +453,8 @@ First public beta.
 - Not a complete secret scanner
 - Git “tracked secret” detection deferred
 
-[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/pranee54/AgentDoctor/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/pranee54/AgentDoctor/compare/v1.1.1...v2.0.0
 [1.1.1]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.1
 [1.1.0]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.0

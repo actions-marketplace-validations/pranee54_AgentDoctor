@@ -3,11 +3,11 @@
 AgentDoctor provides **engineering intelligence and safety for AI coding agents** — repository understanding, knowledge governance, safety controls, MCP interfaces, and verification evidence.
 
 ```text
-Today (shipped — 2.0.0)
+Today (shipped — 2.0.1 partial Change Proof)
 Repository → Understand → Analyze → Govern → Change → Verify → Evidence
 
-Direction (not shipped)
-Evidence packages (“Change Proof”) → Agent Context → Agent Reliability → Team-scale intelligence
+Direction (not fully shipped)
+Full Change Proof UX → Agent Context → Agent Reliability → Team-scale intelligence
 ```
 
 Status legend:
@@ -27,8 +27,9 @@ This document is milestone-based. It does **not** promise calendar dates.
 | P0       | Safety Scan → Fix → Verify → CI                                     | 🟢 Shipped (`1.0.x`+) |
 | P0       | Project Brain + Brain MCP                                           | 🟢 Shipped (`1.1.0`+) |
 | P0       | AgentDoctor 2.0 (intelligence, combined MCP, knowledge, Action pin) | 🟢 Shipped (`2.0.0`)  |
+| P0       | AgentDoctor 2.0.1 change assurance + evidence bundles               | 🟡 Partial (`2.0.1`)  |
 | P0       | Developer adoption (docs clarity, honest capability labels)         | 🟡 Next (process)     |
-| P1       | Change Proof evidence records                                       | 🟡 Planned            |
+| P1       | Change Proof (full product vision beyond assessment + evidence)     | 🟡 Planned            |
 | P1       | Agent Context layer (task-relevant context packaging)               | 🟡 Planned            |
 | P1       | Context freshness / stale-context detection                         | 🟡 Planned            |
 | P1       | Change-aware agent context (Brain Delta evolution)                  | 🟡 Planned            |
@@ -111,13 +112,25 @@ Canonical docs: [docs/2.0/README.md](docs/2.0/README.md) · readiness: [docs/2.0
 
 ---
 
-## Change Proof — 🟡 Planned (design direction)
+## 2.0.1 — Change assurance hardening — 🟡 Partial
 
-**Not implemented as a runtime product.**
+In-repo cut for `@praneeth_54/agentdoctor@2.0.1` (npm publish pending human authorization).
 
-A future change record could attach evidence to an AI-driven change: agent, request, changed files/symbols, callers, tests, policies, ADRs, verification, and security results. Treat as **design direction** only — see README “Roadmap / design direction: Change Proof”.
+Ships **change assurance** (`change analyze` / `change verify`) and **evidence bundles** (inspect + hash verify). Assembles existing git/graph/C4/knowledge/policy/secrets/test-impact signals into an explainable assessment. Status `verified` is reserved for successful evidence hash checks only.
 
-Do not document Change Proof as a current CLI or MCP feature.
+Still **not** full Change Proof product vision: no coverage-backed selection as ground truth, no agent-request binding UX, no SSO, no claim of correctness.
+
+Docs: [docs/2.0.1/README.md](docs/2.0.1/README.md)
+
+---
+
+## Change Proof — 🟡 Partially shipped in 2.0.1 / remainder planned
+
+**Partial (2.0.1):** change assessment + durable evidence under `.agentdoctor/evidence/<id>/` with SHA-256 manifests.
+
+**Still planned:** richer Change Proof records (agent/request binding, coverage-backed proof UX, team-scale workflows). Do not document those as current features.
+
+See README “Change assurance” and [docs/2.0.1/limitations.md](docs/2.0.1/limitations.md).
 
 ---
 

@@ -2,8 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { StorageProvider } from "../contracts/index.js";
-import { resolveRepoRoot, isPathInsideRoot } from "../utils/path.js";
+import { isPathInsideRoot, resolveRepoRoot } from "../utils/path.js";
 import { atomicWriteTextFile } from "../utils/fs.js";
+import { rejectHostilePathInput, PathEscapeError } from "../security/paths.js";
 
 export class FilesystemStorageProvider implements StorageProvider {
   readonly kind = "filesystem" as const;
@@ -14,12 +15,24 @@ export class FilesystemStorageProvider implements StorageProvider {
   }
 
   private resolveKey(key: string): string {
-    if (key.includes("\0") || key.split(/[/\\]/).includes("..") || path.isAbsolute(key)) {
-      throw new Error(`unsafe storage key: ${key}`);
+    if (path.isAbsolute(key)) {
+      throw new Error("unsafe storage key");
     }
-    const target = path.resolve(this.root, key);
-    if (!isPathInsideRoot(this.root, target)) throw new Error("storage path escape");
-    return target;
+    try {
+      // Do not use resolveSafeRepoPath here — it calls resolveRepoRoot() which
+      // walks up from the storage subdir and can false-reject valid keys.
+      rejectHostilePathInput(key);
+      const target = path.resolve(this.root, key);
+      if (!isPathInsideRoot(this.root, target)) {
+        throw new PathEscapeError("storage path escape");
+      }
+      return target;
+    } catch (error) {
+      if (error instanceof PathEscapeError) {
+        throw new Error("storage path escape");
+      }
+      throw new Error("unsafe storage key");
+    }
   }
 
   async get(key: string): Promise<string | null> {
@@ -87,18 +100,8 @@ export class MemoryStorageProvider implements StorageProvider {
   }
 }
 
-/**
- * SQLite provider — optional. Requires better-sqlite3 when enabled.
- * Without the dependency, construction throws a documented error (no fake DB).
- */
-export async function tryCreateSqliteStorage(
-  _root: string,
-): Promise<StorageProvider | { error: string }> {
-  return {
-    error:
-      "SQLite storage is feature-flagged and requires optional dependency better-sqlite3 (not bundled). Use filesystem provider for local-first default.",
-  };
-}
+export { tryCreateSqliteStorage, SqliteStorageProvider } from "./sqlite.js";
+export { tryCreatePostgresStorage, PostgresStorageProvider } from "./postgres.js";
 
 export interface WorkspaceRecord {
   id: string;

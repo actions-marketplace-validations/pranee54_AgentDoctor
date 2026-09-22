@@ -186,13 +186,24 @@ describe("AgentDoctor 2.0 platform security", () => {
       };
       expect(body.role).toBe("readonly");
       expect(body.sampleFindings).toEqual([]);
-      expect(body.limitations.some((l) => /spoofable/i.test(l))).toBe(true);
+      expect(body.limitations.some((l) => /localDevIdentityHint|not authentication/i.test(l))).toBe(
+        true,
+      );
 
       const admin = await fetch(
         `http://127.0.0.1:${server.port}/api/platform?user=local-developer`,
       );
-      const adminBody = (await admin.json()) as { sampleFindings: unknown[] };
-      expect(adminBody.sampleFindings.length).toBeGreaterThanOrEqual(0);
+      const adminBody = (await admin.json()) as {
+        sampleFindings: unknown[];
+        role: string;
+        localDevIdentityHint: string | null;
+        localIdentityHintElevated: boolean;
+      };
+      // Without AGENTDOCTOR_ALLOW_LOCAL_IDENTITY_HINT=1, hint must not elevate.
+      expect(adminBody.localDevIdentityHint).toBe("local-developer");
+      expect(adminBody.localIdentityHintElevated).toBe(false);
+      expect(adminBody.role).toBe("readonly");
+      expect(adminBody.sampleFindings).toEqual([]);
     } finally {
       await server.close();
       await rm(root, { recursive: true, force: true });

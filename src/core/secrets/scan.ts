@@ -4,13 +4,20 @@ import path from "node:path";
 import { readTextFile } from "../../utils/fs.js";
 import { resolveRepoRoot, toPosixRelative } from "../../utils/path.js";
 
+export type SecretSeverity = "critical" | "warning";
+/** Pattern match confidence — independent from severity impact rating. */
+export type SecretConfidence = "low" | "medium" | "high";
+
 export interface SecretFinding {
   file: string;
   line: number;
   ruleId: string;
   /** Always redacted — never contains the secret value */
   redactedSnippet: string;
-  severity: "critical" | "warning";
+  /** Impact if the match is a real secret — not the same as confidence. */
+  severity: SecretSeverity;
+  /** How confident the heuristic is that this match is a secret. */
+  confidence: SecretConfidence;
 }
 
 export interface SecretScanReport {
@@ -21,26 +28,35 @@ export interface SecretScanReport {
   limitations: string[];
 }
 
-const SECRET_PATTERNS: Array<{ id: string; re: RegExp; severity: "critical" | "warning" }> = [
+const SECRET_PATTERNS: Array<{
+  id: string;
+  re: RegExp;
+  severity: SecretSeverity;
+  confidence: SecretConfidence;
+}> = [
   {
     id: "aws-access-key",
     re: /\bAKIA[0-9A-Z]{16}\b/g,
     severity: "critical",
+    confidence: "high",
   },
   {
     id: "generic-api-key",
     re: /\b(?:api[_-]?key|secret[_-]?key|access[_-]?token)\s*[:=]\s*['"]?[A-Za-z0-9_-]{16,}['"]?/gi,
     severity: "warning",
+    confidence: "medium",
   },
   {
     id: "private-key-header",
     re: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g,
     severity: "critical",
+    confidence: "high",
   },
   {
     id: "github-pat",
     re: /\bghp_[A-Za-z0-9]{36}\b/g,
     severity: "critical",
+    confidence: "high",
   },
 ];
 
@@ -164,6 +180,7 @@ export async function scanSecrets(options: {
             ruleId: pattern.id,
             redactedSnippet: redactMatch(line, match[0] ?? ""),
             severity: pattern.severity,
+            confidence: pattern.confidence,
           });
           if (findings.length >= 200) {
             limitations.push("Finding cap reached (200)");

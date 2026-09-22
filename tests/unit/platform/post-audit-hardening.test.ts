@@ -83,6 +83,8 @@ describe("post-audit: test-impact integration", () => {
     try {
       const report = await analyzeTestImpact(root);
       expect(report.gitAvailable).toBe(false);
+      expect(report.mode).toBe("heuristic");
+      expect(report.coverage).toBeNull();
       expect(report.recommendedTests).toEqual([]);
       expect(report.skipRisk).toMatch(/git/i);
     } finally {

@@ -2,7 +2,7 @@
 
 ## Package version
 
-Package version: **2.0.0**. Prefer [docs/2.0/guides/migration.md](../2.0/guides/migration.md).
+Package version: **2.0.1**. Prefer [docs/2.0/guides/migration.md](../2.0/guides/migration.md).
 
 ## Compatible without changes
 

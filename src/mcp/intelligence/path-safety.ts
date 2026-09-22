@@ -1,17 +1,14 @@
 import path from "node:path";
 
-import { isPathInsideRoot, sanitizeForOutput } from "../../utils/path.js";
+import {
+  PathEscapeError,
+  rejectHostilePathInput,
+  resolveSafeRepoPath,
+  tryDecodeUriComponent,
+} from "../../security/paths.js";
+import { sanitizeForOutput } from "../../utils/path.js";
 
-/**
- * Decode a single layer of URI encoding. Rejects malformed sequences by returning null.
- */
-export function tryDecodeUriComponent(value: string): string | null {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return null;
-  }
-}
+export { tryDecodeUriComponent };
 
 /**
  * Validate a user-supplied repository-relative or in-repo target.
@@ -37,11 +34,8 @@ export function assertSafeRepoTarget(root: string, rawTarget: string): string | 
   }
   const candidates = decoded === cleaned ? [cleaned] : [cleaned, decoded];
 
+  let pathLike = false;
   for (const candidate of candidates) {
-    if (candidate.includes("\0")) {
-      throw new Error("invalid target");
-    }
-
     const looksLikePath =
       path.isAbsolute(candidate) ||
       candidate.includes("..") ||
@@ -52,48 +46,31 @@ export function assertSafeRepoTarget(root: string, rawTarget: string): string | 
     if (!looksLikePath) {
       continue;
     }
+    pathLike = true;
 
-    // Reject any .. segment forms before resolve (prevents src/x/../../etc tricks).
-    const normalizedSlashes = candidate.replace(/\\/g, "/");
-    if (
-      normalizedSlashes === ".." ||
-      normalizedSlashes.includes("/../") ||
-      normalizedSlashes.startsWith("../") ||
-      normalizedSlashes.endsWith("/..") ||
-      normalizedSlashes.includes("/..") ||
-      /(^|\/)\.\.($|\/)/.test(normalizedSlashes)
-    ) {
-      throw new Error("path escapes repository root");
-    }
-
-    // Always reject Windows drive-absolute forms (even on POSIX hosts).
-    if (/^[A-Za-z]:[\\/]/.test(candidate)) {
-      throw new Error("path escapes repository root");
-    }
-
-    // Resolve relative to root; absolute candidates resolve to themselves.
-    const resolved = path.isAbsolute(candidate)
-      ? path.resolve(candidate)
-      : path.resolve(root, candidate);
-
-    if (!isPathInsideRoot(root, resolved)) {
-      throw new Error("path escapes repository root");
+    try {
+      rejectHostilePathInput(candidate);
+      resolveSafeRepoPath(root, candidate);
+    } catch (error) {
+      if (error instanceof PathEscapeError) {
+        throw new Error(error.message);
+      }
+      throw new Error("invalid target");
     }
   }
 
-  // Prefer decoded form for relative path returns when path-like.
-  const primary = candidates[candidates.length - 1]!;
-  const looksLikePath =
-    path.isAbsolute(primary) ||
-    primary.includes("..") ||
-    primary.includes("/") ||
-    primary.includes("\\") ||
-    /^[A-Za-z]:[\\/]/.test(primary);
-
-  if (!looksLikePath) {
+  if (!pathLike) {
     return null;
   }
 
-  const resolved = path.isAbsolute(primary) ? path.resolve(primary) : path.resolve(root, primary);
-  return path.relative(root, resolved).split(path.sep).join("/");
+  const primary = candidates[candidates.length - 1]!;
+  try {
+    const abs = resolveSafeRepoPath(root, primary);
+    return path.relative(root, abs).split(path.sep).join("/");
+  } catch (error) {
+    if (error instanceof PathEscapeError) {
+      throw new Error(error.message);
+    }
+    throw new Error("invalid target");
+  }
 }

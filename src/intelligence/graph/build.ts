@@ -7,14 +7,25 @@ import { resolveRepoRoot, toPosixRelative } from "../../utils/path.js";
 import type { GraphEdge, GraphNode, RepositoryGraph } from "../../platform/types.js";
 import { buildRepositoryGraph } from "../../platform/graph/build.js";
 import { CONTRACTS_VERSION } from "../../contracts/index.js";
+import {
+  loadTsconfigPaths,
+  resolveImportSpecifier,
+  type ImportConfidence,
+} from "../resolve/imports.js";
+
+function evidenceForConfidence(confidence: ImportConfidence): "verified" | "inferred" | "unknown" {
+  if (confidence === "EXACT") return "verified";
+  if (confidence === "RESOLVED" || confidence === "INFERRED") return "inferred";
+  return "unknown";
+}
 
 export type GraphBuilderMode = "regex" | "typescript-ast" | "auto";
 
-function nodeId(kind: string, key: string): string {
+export function nodeId(kind: string, key: string): string {
   return `${kind}:${createHash("sha1").update(key).digest("hex").slice(0, 12)}`;
 }
 
-async function listTsFiles(root: string, limit = 400): Promise<string[]> {
+export async function listTsFiles(root: string, limit = 400): Promise<string[]> {
   const out: string[] = [];
   const skip = new Set(["node_modules", ".git", "dist", "coverage", ".agentdoctor", "vendor"]);
   async function walk(dir: string): Promise<void> {
@@ -90,6 +101,7 @@ export async function buildIntelligenceGraph(options: {
     // TypeScript uses `/` on Windows; path.join uses `\`. Normalize before matching.
     const normalizeFsPath = (p: string): string => path.normalize(p).toLowerCase();
     const fileSet = new Set(files.map(normalizeFsPath));
+    const tsconfigPaths = loadTsconfigPaths(root);
 
     const pushNode = (n: GraphNode) => {
       if (seen.has(n.id)) return;
@@ -157,21 +169,54 @@ export async function buildIntelligenceGraph(options: {
           ts.isStringLiteral(node.moduleSpecifier)
         ) {
           const spec = node.moduleSpecifier.text;
+          const resolution = resolveImportSpecifier({
+            root,
+            fromFile: rel,
+            specifier: spec,
+            tsconfig: tsconfigPaths,
+          });
+
+          // Specifier dependency node (always — records the literal import).
           const toId = nodeId("dependency", `${rel}->${spec}`);
           pushNode({
             id: toId,
             kind: "dependency",
             label: spec,
             path: rel,
-            meta: { specifier: spec, parser: "typescript-ast" },
+            meta: {
+              specifier: spec,
+              parser: "typescript-ast",
+              confidence: resolution.confidence,
+              ...(resolution.resolvedPath ? { resolvedPath: resolution.resolvedPath } : {}),
+              ...(resolution.via ? { via: resolution.via } : {}),
+            },
           });
           edges.push({
             id: nodeId("edge", `${fileId}->${toId}`),
             from: fileId,
             to: toId,
             kind: "imports",
-            evidence: spec.startsWith(".") ? "verified" : "inferred",
+            evidence: evidenceForConfidence(resolution.confidence),
           });
+
+          // Concrete file→file edge only when resolved — never invent UNRESOLVED targets.
+          if (resolution.resolvedPath && resolution.confidence !== "UNRESOLVED") {
+            const targetFileId = nodeId("file", resolution.resolvedPath);
+            pushNode({
+              id: targetFileId,
+              kind: "file",
+              label: path.basename(resolution.resolvedPath),
+              path: resolution.resolvedPath,
+              meta: { importConfidence: resolution.confidence },
+            });
+            edges.push({
+              id: nodeId("edge", `${fileId}->file:${resolution.resolvedPath}`),
+              from: fileId,
+              to: targetFileId,
+              kind: "imports",
+              evidence: evidenceForConfidence(resolution.confidence),
+            });
+          }
         }
         if (
           ts.isCallExpression(node) &&
@@ -213,6 +258,7 @@ export async function buildIntelligenceGraph(options: {
       limitations: [
         "TypeScript AST builder uses the TypeScript compiler API for .ts/.tsx only",
         "Cross-file call resolution is identifier-based (not full type-checker binding)",
+        "Import edges use EXACT|RESOLVED|INFERRED confidence; UNRESOLVED never invents file targets",
         "Non-TypeScript languages fall back to regex graph when requested via auto+empty TS set",
         `analysisVersion=${CONTRACTS_VERSION}`,
       ],

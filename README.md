@@ -1,19 +1,17 @@
 # AgentDoctor
 
-### Engineering Intelligence & Safety for AI Coding Agents
+## Engineering assurance for AI coding agents.
 
-**Understand → Analyze → Govern → Change → Verify → Prove**
-
-Understand your codebase, evaluate the impact of changes, govern engineering knowledge, enforce safety policies, and verify AI-generated changes with evidence.
+Understand your codebase, assess the impact of changes, govern engineering knowledge, enforce safety policies, and attach inspectable evidence to AI-driven changes.
 
 [![npm](https://img.shields.io/npm/v/@praneeth_54/agentdoctor?label=npm)](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
 [![CI](https://img.shields.io/github/actions/workflow/status/pranee54/AgentDoctor/ci.yml?branch=main&label=CI)](https://github.com/pranee54/AgentDoctor/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/node/v/@praneeth_54/agentdoctor)](https://nodejs.org)
 [![License](https://img.shields.io/github/license/pranee54/AgentDoctor)](LICENSE)
 
-**Published:** [`@praneeth_54/agentdoctor@2.0.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
+**In-repo cut:** `2.0.1` (publish pending human authorization). Last published: [`@praneeth_54/agentdoctor@2.0.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
 
-[Install](#install) · [Quickstart](#quickstart) · [Documentation](docs/2.0/README.md) · [MCP](#mcp) · [GitHub Action](#github-action) · [Architecture](#architecture)
+[Install](#install) · [Quickstart](#quickstart) · [Change assurance](#change-assurance) · [Documentation](docs/2.0.1/README.md) · [MCP](#mcp) · [GitHub Action](#github-action) · [Architecture](#architecture)
 
 ---
 
@@ -27,7 +25,7 @@ AgentDoctor collects repository signals — source structure, graphs, Git histor
 
 It is **not** an autonomous coding agent, chatbot, or IDE interceptor. It does **not** guarantee correctness. It produces **evidence and controls** you can inspect.
 
-**Short description:** Codebase intelligence, repository analysis, safety controls, and MCP tools for developers and engineering teams.
+**Short description:** Engineering assurance for AI coding agents — repository intelligence, change evidence, safety controls, and MCP tools.
 
 ---
 
@@ -130,6 +128,8 @@ Details and evidence: [docs/2.0/overview/capabilities.md](docs/2.0/overview/capa
 
 | Capability                                              | Status                     |
 | ------------------------------------------------------- | -------------------------- |
+| Change assurance assessment + evidence bundles          | PARTIAL                    |
+| Evidence hash verify (`verified` = integrity only)      | SUPPORTED                  |
 | Unit / integration / MCP STDIO tests (`npm run verify`) | SUPPORTED                  |
 | Packed CLI clean-install smoke                          | SUPPORTED                  |
 | Reproducible AST perf harness                           | PARTIAL (synthetic sample) |
@@ -217,9 +217,11 @@ Canonical docs: [docs/2.0/overview/architecture.md](docs/2.0/overview/architectu
 Requires **Node.js 20+**.
 
 ```bash
-npm install -g @praneeth_54/agentdoctor
-# or
-npx @praneeth_54/agentdoctor@2.0.0 --help
+# Local/RC version is 2.0.1; npm registry may still show 2.0.0 until published.
+npm install -g @praneeth_54/agentdoctor@2.0.1   # after publish
+# or from a packed tarball / this repo:
+# npm install /path/to/praneeth_54-agentdoctor-2.0.1.tgz
+npx @praneeth_54/agentdoctor@2.0.1 --help       # after publish
 ```
 
 From source:
@@ -236,7 +238,7 @@ npm run verify
 ## Quickstart
 
 ```bash
-agentdoctor --version          # 2.0.0
+agentdoctor --version          # 2.0.1
 agentdoctor scan .
 agentdoctor scan . --json
 agentdoctor fix --dry-run
@@ -251,12 +253,43 @@ agentdoctor graph --mode auto --json
 agentdoctor impact --json
 agentdoctor c4 --json
 
+# Change assurance
+agentdoctor change analyze
+agentdoctor change verify
+agentdoctor change explain|diff|status
+agentdoctor evidence inspect <id>
+agentdoctor evidence verify <id>
+agentdoctor proof build|inspect|verify|export <id>
+
+# Architecture / policy / controlled run
+agentdoctor architecture init|check|explain
+agentdoctor policy check|explain --command "npm test"
+agentdoctor run explain --command "npm test"
+agentdoctor workspace create|add|list|status|remove
+
 # MCP (absolute --root required)
 agentdoctor brain-mcp --root /ABS/PATH/TO/REPO
 agentdoctor mcp --root /ABS/PATH/TO/REPO
 ```
 
-CLI reference: [docs/2.0/guides/cli.md](docs/2.0/guides/cli.md)
+CLI reference: [docs/2.0/guides/cli.md](docs/2.0/guides/cli.md) · Change assurance: [docs/2.0.1/change-assurance.md](docs/2.0.1/change-assurance.md)
+
+---
+
+## Change assurance
+
+Structured assessment, evidence bundles, and Change Proof **integrity** (not engineering correctness). Optional `--coverage` for coverage-backed / hybrid test impact. See [docs/2.0.1/FINAL_COMPLETION_AUDIT.md](docs/2.0.1/FINAL_COMPLETION_AUDIT.md).
+
+```bash
+agentdoctor change analyze              # ChangeAssessment (verificationStatus: not-run)
+agentdoctor change verify               # write .agentdoctor/evidence/<id>/ (evidence-produced)
+agentdoctor change explain|diff|status
+agentdoctor evidence inspect <id>       # list artifacts + manifest
+agentdoctor evidence verify <id>        # SHA-256 check; verified only if all hashes match
+agentdoctor proof inspect|verify <id>   # integrity; correctnessStatus always NOT_CLAIMED
+```
+
+`verified` means artifact integrity against the manifest — not that the change is correct or safe. Details: [docs/2.0.1/change-assurance.md](docs/2.0.1/change-assurance.md) · [docs/2.0.1/evidence.md](docs/2.0.1/evidence.md)
 
 ---
 
@@ -270,7 +303,7 @@ AgentDoctor exposes local **STDIO** MCP servers (no API key).
 | Combined MCP | `agentdoctor mcp --root <abs>`       | All `brain_*` tools **plus** intelligence tools below                                                                                                               |
 
 Intelligence tools (combined MCP):
-`repo_overview`, `codebase_search`, `symbol_lookup`, `dependency_lookup`, `call_graph_lookup`, `test_impact`, `refactor_impact`, `code_health`, `architecture_info`, `knowledge_retrieve`, `policy_evaluate`
+`repo_overview`, `codebase_search`, `symbol_lookup`, `dependency_lookup`, `call_graph_lookup`, `test_impact`, `refactor_impact`, `code_health`, `architecture_info`, `architecture_check`, `knowledge_retrieve`, `policy_evaluate`, `change_analyze`, `proof_inspect`, `evidence_inspect`, `graph_query`
 
 Guide: [docs/2.0/guides/mcp.md](docs/2.0/guides/mcp.md) · Deep Brain MCP: [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md)
 
@@ -278,13 +311,13 @@ Guide: [docs/2.0/guides/mcp.md](docs/2.0/guides/mcp.md) · Deep Brain MCP: [docs
 
 ## GitHub Action
 
-Use AgentDoctor Safety in CI for scan / verify gates. Default npm version input is **`2.0.0`**.
+Use AgentDoctor Safety in CI for scan / verify gates. Default npm version input is **`2.0.1`**.
 
 ```yaml
-- uses: pranee54/AgentDoctor@v2.0.0
+- uses: pranee54/AgentDoctor@v2.0.1
   with:
     path: .
-    version: "2.0.0"
+    version: "2.0.1"
     fail-on-severity: critical
 ```
 
@@ -298,15 +331,15 @@ Marketplace listing: confirm in the GitHub UI if you need Marketplace discovery 
 
 ## Security model
 
-| Control     | Behavior                                                                |
-| ----------- | ----------------------------------------------------------------------- |
-| Path safety | MCP / dashboard reject traversal, encoded escapes, hostile URLs         |
-| Safe Fix    | Preflight targets; refuse symlink write-through / non-allowlisted paths |
-| Secrets     | Opt-in scan; findings and exports redact sensitive patterns             |
-| Policy      | Evaluate-only by default (`executionResult: "not-executed"`)            |
-| Enforcement | Controlled runner blocks; does **not** claim IDE interception           |
-| Dashboard   | Loopback by default; non-loopback requires explicit opt-in              |
-| Team auth   | Local-dev scrypt only — **not** enterprise SSO                          |
+| Control     | Behavior                                                                   |
+| ----------- | -------------------------------------------------------------------------- |
+| Path safety | MCP / dashboard reject traversal, encoded escapes, hostile URLs            |
+| Safe Fix    | Preflight targets; refuse symlink write-through / non-allowlisted paths    |
+| Secrets     | Opt-in scan; findings and exports redact sensitive patterns                |
+| Policy      | Evaluate-only by default (`executionResult: "not-executed"`)               |
+| Enforcement | Controlled runner blocks; does **not** claim IDE interception              |
+| Dashboard   | Loopback by default; non-loopback requires explicit opt-in                 |
+| Team auth   | Local-dev scrypt + optional OIDC JWT validation — **not** full browser SSO |
 
 Threat model: [docs/2.0/overview/security-threat-model.md](docs/2.0/overview/security-threat-model.md) · Trust boundaries: [docs/2.0/overview/trust-boundaries.md](docs/2.0/overview/trust-boundaries.md)
 
@@ -314,40 +347,39 @@ Threat model: [docs/2.0/overview/security-threat-model.md](docs/2.0/overview/sec
 
 ## What AgentDoctor does not do
 
-- Enterprise SSO / IdP
-- Complete multi-language AST (beyond TS/JS depth)
-- Coverage-file-backed test selection as ground truth
-- IDE / agent process interception
+- Full browser OAuth / production IdP login UX (JWT validation library path exists; redirect flow is experimental)
+- Complete multi-language AST (Java / Kotlin / Rust / Dart / Go extractors external or unsupported)
+- Coverage as universal ground truth without a coverage file / test map
+- IDE / agent process interception (external host APIs)
 - Production multi-tenant cloud / managed hosting in this package
 - Guaranteed autonomous command execution of “allowed” policies
 - Treating inferred C4 / heuristic impact as approved architecture truth
-- Shipping full `docs/2.0/` inside the npm tarball (Option B: README + GitHub docs)
+- Shipping full `docs/2.0.1/` inside the npm tarball (Option B: README + GitHub docs)
 
-Full list: [docs/2.0/overview/known-limitations.md](docs/2.0/overview/known-limitations.md)
+Full list: [docs/2.0.1/limitations.md](docs/2.0.1/limitations.md) · [docs/2.0/overview/known-limitations.md](docs/2.0/overview/known-limitations.md)
 
 ---
 
-## Roadmap / design direction: Change Proof
+## Roadmap note: Change Proof
 
-**PLANNED** — not a shipped runtime product.
+Change assessment, evidence, and proof **integrity** shipped in 2.0.1. `correctnessStatus` is always `ENGINEERING_CORRECTNESS_NOT_CLAIMED`. Broader compliance / team-scale proof UX remains planned.
 
-A future “Change Proof” record could attach evidence to an AI-driven change: request, files/symbols, callers, tests, policies, ADRs, verification, and security results. Treat this as **design direction**, not a current CLI feature.
-
-See [ROADMAP.md](ROADMAP.md).
+See [ROADMAP.md](ROADMAP.md) · [docs/2.0.1/limitations.md](docs/2.0.1/limitations.md) · [docs/2.0.1/FINAL_COMPLETION_AUDIT.md](docs/2.0.1/FINAL_COMPLETION_AUDIT.md).
 
 ---
 
 ## Documentation map
 
-| Audience                               | Start here                                                                                              |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Product / 2.0                          | [docs/2.0/README.md](docs/2.0/README.md)                                                                |
-| Capabilities / readiness               | [capabilities](docs/2.0/overview/capabilities.md) · [readiness](docs/2.0/overview/readiness-matrix.md)  |
-| Guides                                 | [docs/2.0/guides/](docs/2.0/guides/)                                                                    |
-| Reference (rules, scoring, exit codes) | [docs/reference/](docs/reference/)                                                                      |
-| Contributing                           | [CONTRIBUTING.md](CONTRIBUTING.md) · [docs/development/development.md](docs/development/development.md) |
-| Changelog                              | [CHANGELOG.md](CHANGELOG.md)                                                                            |
-| Release evidence                       | [docs/2.0/release/final-release-report.md](docs/2.0/release/final-release-report.md)                    |
+| Audience                               | Start here                                                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Product / 2.0.1                        | [docs/2.0.1/README.md](docs/2.0.1/README.md)                                                                              |
+| Product / 2.0                          | [docs/2.0/README.md](docs/2.0/README.md)                                                                                  |
+| Capabilities / readiness               | [capabilities](docs/2.0/overview/capabilities.md) · [readiness](docs/2.0/overview/readiness-matrix.md)                    |
+| Guides                                 | [docs/2.0/guides/](docs/2.0/guides/)                                                                                      |
+| Reference (rules, scoring, exit codes) | [docs/reference/](docs/reference/)                                                                                        |
+| Contributing                           | [CONTRIBUTING.md](CONTRIBUTING.md) · [docs/development/development.md](docs/development/development.md)                   |
+| Changelog                              | [CHANGELOG.md](CHANGELOG.md)                                                                                              |
+| Release evidence                       | [FINAL_RELEASE_AUDIT](docs/2.0.1/FINAL_RELEASE_AUDIT.md) · [FINAL_COMPLETION_AUDIT](docs/2.0.1/FINAL_COMPLETION_AUDIT.md) |
 
 ---
 

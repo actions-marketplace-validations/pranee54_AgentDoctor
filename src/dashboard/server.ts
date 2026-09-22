@@ -73,7 +73,7 @@ export interface DashboardServerOptions {
   readOnly?: boolean;
   /**
    * Unsafe opt-in to bind outside loopback. Not an enterprise security boundary.
-   * Local ?user= role selection remains spoofable.
+   * Query ?user= is a localDevIdentityHint only; role elevation requires AGENTDOCTOR_ALLOW_LOCAL_IDENTITY_HINT=1.
    */
   allowNonLoopback?: boolean;
 }
@@ -115,7 +115,7 @@ function htmlPage(): string {
   <header>
     <h1>AgentDoctor 2.0</h1>
     <p>Local read-only dashboard — Safety + Brain + intelligence. No cloud writes.</p>
-    <p class="notice muted">Action Policy Evaluator is evaluate-only. Local ?user= is not authentication. Team local-dev auth is separate and not SSO.</p>
+    <p class="notice muted">Action Policy Evaluator is evaluate-only. Query ?user= is a localDevIdentityHint only (not authentication). Team local-dev auth is separate and not SSO. OIDC JWT validation is a library path — full browser OAuth redirect is experimental.</p>
   </header>
   <main>
     <nav aria-label="Views" style="display:flex;flex-wrap:wrap;gap:0.75rem;font-size:0.9rem">
@@ -239,7 +239,8 @@ export async function startDashboardServer(
           host,
           loopbackOnly: isLoopbackHost(host),
           contractsVersion: CONTRACTS_VERSION,
-          roleNote: "Local ?user= role selection is not authentication",
+          roleNote:
+            "Query ?user= is a localDevIdentityHint only — not authentication. Privileged role elevation requires AGENTDOCTOR_ALLOW_LOCAL_IDENTITY_HINT=1",
           actionPolicyNote: EVALUATE_ONLY,
           adapters: agentRegistry.map((a) => a.id),
           policyPacks: listPolicyPacks(),
@@ -290,9 +291,22 @@ export async function startDashboardServer(
       }
       if (url.pathname === "/api/platform") {
         const auth = await loadLocalAuthConfig(root);
-        const role = resolveRole(auth, url.searchParams.get("user") ?? undefined);
+        const identityHint = url.searchParams.get("user");
+        const allowLocalHint = process.env.AGENTDOCTOR_ALLOW_LOCAL_IDENTITY_HINT === "1";
+        // Default: deny privileged elevation. ?user= is a label only unless opt-in env is set.
+        let role = auth.defaultRole;
+        const localDevIdentityHint =
+          identityHint && identityHint.trim() ? identityHint.trim() : null;
+        if (localDevIdentityHint && allowLocalHint) {
+          role = resolveRole(auth, localDevIdentityHint);
+        }
         if (!canAccess(role, "read-findings")) {
-          sendJson(res, 403, { error: "forbidden" });
+          sendJson(res, 403, {
+            error: "forbidden",
+            localDevIdentityHint,
+            notice:
+              "?user= is not authentication; privileged ops denied without AGENTDOCTOR_ALLOW_LOCAL_IDENTITY_HINT=1",
+          });
           return;
         }
         const snapshot = await readJsonIfExists<PlatformSnapshot>(
@@ -304,6 +318,8 @@ export async function startDashboardServer(
           : [];
         sendJson(res, 200, {
           role,
+          localDevIdentityHint,
+          localIdentityHintElevated: Boolean(localDevIdentityHint && allowLocalHint),
           hasSnapshot: snapshot !== null,
           findingCount: snapshot?.findings.length ?? 0,
           graphNodes: snapshot?.graph.nodes.length ?? 0,
@@ -328,7 +344,10 @@ export async function startDashboardServer(
             ...(snapshot?.limitations ?? [
               "No platform snapshot yet — run: agentdoctor platform scan",
             ]),
-            "Local ?user= role selection is not authentication — spoofable on shared hosts",
+            "?user= is localDevIdentityHint only — not authentication",
+            allowLocalHint
+              ? "AGENTDOCTOR_ALLOW_LOCAL_IDENTITY_HINT=1 enabled — hint may elevate local roles (still not SSO)"
+              : "Privileged role elevation from ?user= denied unless AGENTDOCTOR_ALLOW_LOCAL_IDENTITY_HINT=1",
             EVALUATE_ONLY,
           ],
           sampleFindings: canExport

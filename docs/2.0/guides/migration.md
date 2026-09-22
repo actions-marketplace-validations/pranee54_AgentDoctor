@@ -2,7 +2,7 @@
 
 ## Version policy
 
-Package version: **2.0.0**. Contracts version string `2.0.0-contracts` identifies shared types.
+Package version: **2.0.1**. Contracts version string `2.0.0-contracts` identifies shared types.
 
 ## Backward compatibility
 

@@ -117,6 +117,7 @@ export interface PlatformSnapshot {
 /** Persisted subset of Module H test-impact analysis. */
 export interface TestImpactSnapshot {
   gitAvailable: boolean;
+  mode: "coverage-backed" | "heuristic";
   changedFiles: string[];
   recommendedTests: Array<{
     testPath: string;
@@ -134,6 +135,14 @@ export interface TestImpactSnapshot {
   }>;
   uncoveredAreas: string[];
   skipRisk: string;
+  coverage: {
+    format: string;
+    filesWithHits: number;
+    changedCoveredLines: number;
+    changedUncoveredLines: number;
+    coverageHits: number;
+    testAttribution: "coverage-map" | "hybrid-heuristic" | "none";
+  } | null;
   limitations: string[];
 }
 

@@ -50,14 +50,26 @@ describe("Task5 enforcement honesty", () => {
     expect(approval.decision.approvalStatus).toBe("pending");
   });
 
-  it("executeIfAllowed still does not execute in this release (honest not-executed)", async () => {
+  it("executeIfAllowed runs allowlisted commands under AgentDoctor control", async () => {
     const root = await repo();
+    const platform = path.join(root, ".agentdoctor", "platform");
+    await fs.mkdir(platform, { recursive: true });
+    await fs.writeFile(
+      path.join(platform, "firewall-policy.json"),
+      JSON.stringify({
+        version: "2.0",
+        defaultDecision: "require-approval",
+        shellAllowlist: ["npm --version", "npm test"],
+        rules: [],
+      }),
+    );
+
     const result = await runControlledCommand({
       root,
-      command: "npm test",
+      command: "npm --version",
       executeIfAllowed: true,
     });
     expect(result.decision.decision).toBe("allow");
-    expect(result.decision.executionStatus).toBe("not-executed");
+    expect(result.decision.executionStatus).toBe("executed");
   });
 });

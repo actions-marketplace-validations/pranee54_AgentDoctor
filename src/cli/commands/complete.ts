@@ -205,10 +205,13 @@ export async function runV2SurfaceCommand(options: {
         return EXIT_CODES.SUCCESS;
       }
       case "impact": {
-        const impact = await analyzeTestImpact(root);
+        const impact = await analyzeTestImpact({ root });
         if (options.json)
           printJson({ kind: "test-impact", contractsVersion: CONTRACTS_VERSION, impact });
-        else process.stdout.write(`impact recommendedTests=${impact.recommendedTests.length}\n`);
+        else
+          process.stdout.write(
+            `impact mode=${impact.mode} recommendedTests=${impact.recommendedTests.length}\n`,
+          );
         return EXIT_CODES.SUCCESS;
       }
       case "refactor-impact": {

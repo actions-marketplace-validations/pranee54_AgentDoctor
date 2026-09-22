@@ -28,12 +28,14 @@ export interface PlatformScanResult {
 function toTestImpactSnapshot(report: TestImpactReport): TestImpactSnapshot {
   return {
     gitAvailable: report.gitAvailable,
+    mode: report.mode,
     changedFiles: report.changedFiles,
     recommendedTests: report.recommendedTests,
     relatedModules: report.relatedModules,
     missingTestWarnings: report.missingTestWarnings,
     uncoveredAreas: report.uncoveredAreas,
     skipRisk: report.skipRisk,
+    coverage: report.coverage,
     limitations: report.limitations,
   };
 }

@@ -26,10 +26,40 @@ import {
 import { runPlatformCommand } from "./commands/platform.js";
 import { runInitCommand, runV2SurfaceCommand } from "./commands/complete.js";
 import { runMcpCommand } from "./commands/mcp.js";
+import {
+  runChangeAnalyzeCommand,
+  runChangeDiffCommand,
+  runChangeExplainCommand,
+  runChangeStatusCommand,
+  runChangeVerifyCommand,
+  runEvidenceInspectCommand,
+  runEvidenceVerifyCommand,
+  runProofBuildCommand,
+  runProofExplainCommand,
+  runProofExportCommand,
+  runProofInspectCommand,
+  runProofVerifyCommand,
+} from "./commands/assurance.js";
+import {
+  runGraphSurfaceCommand,
+  runPolicyCheckCommand,
+  runPolicyEnforceCommand,
+  runPolicyExplainCommand,
+  runRunCommand,
+  runRunExplainCommand,
+} from "./commands/policy-graph-run.js";
+import { runArchitectureCommand } from "./commands/architecture.js";
+import { runWorkspaceCommand } from "./commands/workspace.js";
 import { collectOpsHealth } from "../ops/health.js";
 import { listSessions, loadSession } from "../platform/sessions/store.js";
 import { exportReports } from "../platform/reports/export.js";
 import { runPlatformScan } from "../platform/index.js";
+import {
+  analyzeTestImpact,
+  formatTestImpactHuman,
+  persistTestImpactReport,
+} from "../platform/test-impact/analyze.js";
+import { resolveRepoRoot } from "../utils/path.js";
 
 function parseMinScore(value: string): number {
   const parsed = Number(value);
@@ -395,18 +425,75 @@ export function createProgram(): Command {
       });
     });
 
-  program
+  const graph = program
     .command("graph")
-    .description("Build intelligence graph (TypeScript AST when available; regex fallback)")
+    .description(
+      "Build / update intelligence graph (TypeScript AST when available; regex fallback). Bare `graph` aliases build.",
+    )
     .argument("[path]", "Repository path")
     .option("--mode <mode>", "auto|regex|typescript-ast", "auto")
     .option("--json", "Emit JSON", false)
     .action(async (pathArg: string | undefined, _options, command: Command) => {
       const options = command.optsWithGlobals() as { mode?: string; json?: boolean };
-      process.exitCode = await runV2SurfaceCommand({
-        action: "graph-ast",
+      // Backward compat: `agentdoctor graph --json` → build + persist
+      process.exitCode = await runGraphSurfaceCommand({
+        action: "build",
         root: resolveTargetArgument(pathArg),
         mode: options.mode ?? "auto",
+        json: Boolean(options.json),
+      });
+    });
+  graph
+    .command("build")
+    .description("Build graph and persist .agentdoctor/graph/index.json")
+    .argument("[path]", "Repository path")
+    .option("--mode <mode>", "auto|regex|typescript-ast", "auto")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { mode?: string; json?: boolean }) => {
+      process.exitCode = await runGraphSurfaceCommand({
+        action: "build",
+        root: resolveTargetArgument(pathArg),
+        mode: options.mode ?? "auto",
+        json: Boolean(options.json),
+      });
+    });
+  graph
+    .command("update")
+    .description("Incrementally update graph from git/hash changes (rebuilds on corruption)")
+    .argument("[path]", "Repository path")
+    .option("--mode <mode>", "auto|regex|typescript-ast", "auto")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { mode?: string; json?: boolean }) => {
+      process.exitCode = await runGraphSurfaceCommand({
+        action: "update",
+        root: resolveTargetArgument(pathArg),
+        mode: options.mode ?? "auto",
+        json: Boolean(options.json),
+      });
+    });
+  graph
+    .command("rebuild")
+    .description("Force full graph rebuild")
+    .argument("[path]", "Repository path")
+    .option("--mode <mode>", "auto|regex|typescript-ast", "auto")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { mode?: string; json?: boolean }) => {
+      process.exitCode = await runGraphSurfaceCommand({
+        action: "rebuild",
+        root: resolveTargetArgument(pathArg),
+        mode: options.mode ?? "auto",
+        json: Boolean(options.json),
+      });
+    });
+  graph
+    .command("status")
+    .description("Show persisted graph index status")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runGraphSurfaceCommand({
+        action: "status",
+        root: resolveTargetArgument(pathArg),
         json: Boolean(options.json),
       });
     });
@@ -427,30 +514,70 @@ export function createProgram(): Command {
 
   program
     .command("impact")
-    .description("Change/test impact analysis")
+    .description(
+      "Change/test impact analysis (heuristic by default; coverage-backed with --coverage)",
+    )
     .argument("[path]", "Repository path")
+    .option("--coverage <path>", "LCOV / Istanbul JSON / Cobertura XML coverage file")
+    .option("--since <ref>", "Diff since git ref")
     .option("--json", "Emit JSON", false)
     .action(async (pathArg: string | undefined, _options, command: Command) => {
-      const options = command.optsWithGlobals() as { json?: boolean };
-      process.exitCode = await runV2SurfaceCommand({
-        action: "impact",
-        root: resolveTargetArgument(pathArg),
-        json: Boolean(options.json),
-      });
+      const options = command.optsWithGlobals() as {
+        json?: boolean;
+        coverage?: string;
+        since?: string;
+      };
+      const root = resolveTargetArgument(pathArg);
+      try {
+        const impact = await analyzeTestImpact({
+          root,
+          ...(options.coverage ? { coveragePath: options.coverage } : {}),
+          ...(options.since ? { since: options.since } : {}),
+        });
+        if (options.json) {
+          process.stdout.write(`${JSON.stringify(impact, null, 2)}\n`);
+        } else {
+          process.stdout.write(formatTestImpactHuman(impact));
+        }
+        process.exitCode = EXIT_CODES.SUCCESS;
+      } catch (error) {
+        console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        process.exitCode = EXIT_CODES.INTERNAL_ERROR;
+      }
     });
 
   program
     .command("test-impact")
     .description("Test-impact analysis (alias of impact)")
     .argument("[path]", "Repository path")
+    .option("--coverage <path>", "LCOV / Istanbul JSON / Cobertura XML coverage file")
+    .option("--since <ref>", "Diff since git ref")
     .option("--json", "Emit JSON", false)
     .action(async (pathArg: string | undefined, _options, command: Command) => {
-      const options = command.optsWithGlobals() as { json?: boolean };
-      process.exitCode = await runV2SurfaceCommand({
-        action: "impact",
-        root: resolveTargetArgument(pathArg),
-        json: Boolean(options.json),
-      });
+      const options = command.optsWithGlobals() as {
+        json?: boolean;
+        coverage?: string;
+        since?: string;
+      };
+      const root = resolveTargetArgument(pathArg);
+      try {
+        const impact = await analyzeTestImpact({
+          root,
+          ...(options.coverage ? { coveragePath: options.coverage } : {}),
+          ...(options.since ? { since: options.since } : {}),
+        });
+        const out = await persistTestImpactReport(resolveRepoRoot(root), impact);
+        if (options.json) {
+          process.stdout.write(`${JSON.stringify({ ...impact, reportPath: out }, null, 2)}\n`);
+        } else {
+          process.stdout.write(formatTestImpactHuman(impact));
+          process.stdout.write(`  wrote: ${out}\n`);
+        }
+        process.exitCode = EXIT_CODES.SUCCESS;
+      } catch (error) {
+        console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        process.exitCode = EXIT_CODES.INTERNAL_ERROR;
+      }
     });
 
   program
@@ -530,6 +657,60 @@ export function createProgram(): Command {
       const options = command.optsWithGlobals() as { json?: boolean };
       process.exitCode = await runV2SurfaceCommand({
         action: "c4",
+        root: resolveTargetArgument(pathArg),
+        json: Boolean(options.json),
+      });
+    });
+
+  const architecture = program
+    .command("architecture")
+    .description(
+      "Architecture contract + C4 views (rules are advisory until you treat check as a gate)",
+    );
+  architecture
+    .command("init")
+    .description("Write default .agentdoctor/architecture.json if missing")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runArchitectureCommand({
+        action: "init",
+        root: resolveTargetArgument(pathArg),
+        json: Boolean(options.json),
+      });
+    });
+  architecture
+    .command("analyze")
+    .description("C4 views + architecture contract summary")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runArchitectureCommand({
+        action: "analyze",
+        root: resolveTargetArgument(pathArg),
+        json: Boolean(options.json),
+      });
+    });
+  architecture
+    .command("check")
+    .description("Check import edges against .agentdoctor/architecture.json|.yml")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runArchitectureCommand({
+        action: "check",
+        root: resolveTargetArgument(pathArg),
+        json: Boolean(options.json),
+      });
+    });
+  architecture
+    .command("explain")
+    .description("Explain architecture layers, forbidden/allowed rules, and recent violations")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runArchitectureCommand({
+        action: "explain",
         root: resolveTargetArgument(pathArg),
         json: Boolean(options.json),
       });
@@ -645,6 +826,451 @@ export function createProgram(): Command {
         root: resolveTargetArgument(pathArg),
         username: options.username,
         password: options.password,
+        json: Boolean(options.json),
+      });
+    });
+
+  const change = program
+    .command("change")
+    .description(
+      "Change assurance — structured assessment and evidence (never claims verified without evidence)",
+    );
+  change
+    .command("analyze")
+    .description("Assemble a ChangeAssessment from git, graph, policy, knowledge, and test signals")
+    .argument("[path]", "Repository path")
+    .option("--since <ref>", "Diff since git ref (e.g. main)")
+    .option("--coverage <path>", "LCOV / Istanbul JSON / Cobertura XML coverage file")
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { since?: string; coverage?: string; json?: boolean },
+      ) => {
+        process.exitCode = await runChangeAnalyzeCommand({
+          root: resolveTargetArgument(pathArg),
+          ...(options.since ? { since: options.since } : {}),
+          ...(options.coverage ? { coverage: options.coverage } : {}),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  change
+    .command("verify")
+    .description(
+      "Produce a durable evidence bundle under .agentdoctor/evidence/<id>/ (status: evidence-produced)",
+    )
+    .argument("[path]", "Repository path")
+    .option("--since <ref>", "Diff since git ref (e.g. main)")
+    .option("--change-id <id>", "Reuse a change id")
+    .option("--coverage <path>", "LCOV / Istanbul JSON / Cobertura XML coverage file")
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { since?: string; changeId?: string; coverage?: string; json?: boolean },
+      ) => {
+        process.exitCode = await runChangeVerifyCommand({
+          root: resolveTargetArgument(pathArg),
+          ...(options.since ? { since: options.since } : {}),
+          ...(options.changeId ? { changeId: options.changeId } : {}),
+          ...(options.coverage ? { coverage: options.coverage } : {}),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  change
+    .command("explain")
+    .description("Human explanation of a change assessment (does not claim correctness)")
+    .argument("[path]", "Repository path")
+    .option("--since <ref>", "Diff since git ref")
+    .option("--change-id <id>", "Change id")
+    .option("--coverage <path>", "LCOV / Istanbul JSON / Cobertura XML coverage file")
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { since?: string; changeId?: string; coverage?: string; json?: boolean },
+      ) => {
+        process.exitCode = await runChangeExplainCommand({
+          root: resolveTargetArgument(pathArg),
+          ...(options.since ? { since: options.since } : {}),
+          ...(options.changeId ? { changeId: options.changeId } : {}),
+          ...(options.coverage ? { coverage: options.coverage } : {}),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  change
+    .command("diff")
+    .description("Summarize base/target file diffs from git")
+    .argument("[path]", "Repository path")
+    .option("--since <ref>", "Diff since git ref")
+    .option("--change-id <id>", "Change id (label only)")
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { since?: string; changeId?: string; json?: boolean },
+      ) => {
+        process.exitCode = await runChangeDiffCommand({
+          root: resolveTargetArgument(pathArg),
+          ...(options.since ? { since: options.since } : {}),
+          ...(options.changeId ? { changeId: options.changeId } : {}),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  change
+    .command("status")
+    .description("Verification / evidence status for latest or --change-id")
+    .argument("[path]", "Repository path")
+    .option("--change-id <id>", "Change id")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { changeId?: string; json?: boolean }) => {
+      process.exitCode = await runChangeStatusCommand({
+        root: resolveTargetArgument(pathArg),
+        ...(options.changeId ? { changeId: options.changeId } : {}),
+        json: Boolean(options.json),
+      });
+    });
+
+  const evidence = program
+    .command("evidence")
+    .description("Inspect and hash-verify change evidence bundles");
+  evidence
+    .command("inspect")
+    .description("List evidence artifacts for a change id")
+    .argument("<changeId>", "Change id (chg_…)")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (changeId: string, pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runEvidenceInspectCommand({
+        root: resolveTargetArgument(pathArg),
+        changeId,
+        json: Boolean(options.json),
+      });
+    });
+  evidence
+    .command("verify")
+    .description("Hash-check evidence bundle; status verified only when all hashes match")
+    .argument("<changeId>", "Change id (chg_…)")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (changeId: string, pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runEvidenceVerifyCommand({
+        root: resolveTargetArgument(pathArg),
+        changeId,
+        json: Boolean(options.json),
+      });
+    });
+
+  const proof = program
+    .command("proof")
+    .description(
+      "ChangeProof — hash integrity over evidence (never claims engineering correctness)",
+    );
+  proof
+    .command("build")
+    .description("Build a ChangeProof from an evidence bundle")
+    .argument("<changeId>", "Change id (chg_…)")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (changeId: string, pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runProofBuildCommand({
+        root: resolveTargetArgument(pathArg),
+        changeId,
+        json: Boolean(options.json),
+      });
+    });
+  proof
+    .command("inspect")
+    .description("Inspect a proof by proofId or changeId")
+    .argument("<id>", "proofId or changeId")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (id: string, pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runProofInspectCommand({
+        root: resolveTargetArgument(pathArg),
+        id,
+        json: Boolean(options.json),
+      });
+    });
+  proof
+    .command("explain")
+    .description("Human explanation of a ChangeProof (does not claim correctness)")
+    .argument("<id>", "proofId or changeId")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (id: string, pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runProofExplainCommand({
+        root: resolveTargetArgument(pathArg),
+        id,
+        json: Boolean(options.json),
+      });
+    });
+  proof
+    .command("verify")
+    .description("Re-hash evidence and compare to proof (integrity only)")
+    .argument("<id>", "proofId or changeId")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(async (id: string, pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runProofVerifyCommand({
+        root: resolveTargetArgument(pathArg),
+        id,
+        json: Boolean(options.json),
+      });
+    });
+  proof
+    .command("export")
+    .description("Export a proof JSON file")
+    .argument("<id>", "proofId or changeId")
+    .requiredOption("--out <file>", "Output file path")
+    .argument("[path]", "Repository path")
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (id: string, pathArg: string | undefined, options: { out: string; json?: boolean }) => {
+        process.exitCode = await runProofExportCommand({
+          root: resolveTargetArgument(pathArg),
+          id,
+          out: options.out,
+          json: Boolean(options.json),
+        });
+      },
+    );
+
+  const policy = program
+    .command("policy")
+    .description("Action policy check / explain / enforce (controlled runner)");
+  policy
+    .command("check")
+    .description("Evaluate a command against local policy (evaluate-only)")
+    .requiredOption("--command <cmd>", "Command string")
+    .argument("[path]", "Repository path")
+    .option("--fail-closed", "Deny on invalid local policy", false)
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { command: string; failClosed?: boolean; json?: boolean },
+      ) => {
+        process.exitCode = await runPolicyCheckCommand({
+          root: resolveTargetArgument(pathArg),
+          command: options.command,
+          failClosed: Boolean(options.failClosed),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  policy
+    .command("explain")
+    .description("Explain why a command receives its policy decision")
+    .requiredOption("--command <cmd>", "Command string")
+    .argument("[path]", "Repository path")
+    .option("--fail-closed", "Deny on invalid local policy", false)
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { command: string; failClosed?: boolean; json?: boolean },
+      ) => {
+        process.exitCode = await runPolicyExplainCommand({
+          root: resolveTargetArgument(pathArg),
+          command: options.command,
+          failClosed: Boolean(options.failClosed),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  policy
+    .command("enforce")
+    .description("Evaluate policy; optionally execute when --execute and decision=allow")
+    .requiredOption("--command <cmd>", "Command string")
+    .option("--execute", "Execute via controlled runner when allowed", false)
+    .argument("[path]", "Repository path")
+    .option("--fail-closed", "Deny on invalid local policy", false)
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { command: string; execute?: boolean; failClosed?: boolean; json?: boolean },
+      ) => {
+        process.exitCode = await runPolicyEnforceCommand({
+          root: resolveTargetArgument(pathArg),
+          command: options.command,
+          execute: Boolean(options.execute),
+          failClosed: Boolean(options.failClosed),
+          json: Boolean(options.json),
+        });
+      },
+    );
+
+  const runCmd = program
+    .command("run")
+    .description(
+      "Controlled execution (shell=false by default). Prefer: agentdoctor run -- <cmd> <args...>",
+    );
+  runCmd
+    .command("explain")
+    .description("Explain controlled-runner decision for a command (evaluate-only, never executes)")
+    .requiredOption("--command <cmd>", "Command string")
+    .argument("[path]", "Repository path")
+    .option("--shell", "Explain as if shell=true were requested", false)
+    .option("--fail-closed", "Deny on invalid local policy", false)
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { command: string; shell?: boolean; failClosed?: boolean; json?: boolean },
+      ) => {
+        process.exitCode = await runRunExplainCommand({
+          root: resolveTargetArgument(pathArg),
+          command: options.command,
+          shell: Boolean(options.shell),
+          failClosed: Boolean(options.failClosed),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  runCmd
+    .option("--shell", "HIGH RISK: allow shell interpretation (still requires policy allow)", false)
+    .option("--timeout <ms>", "Kill after timeout milliseconds", "30000")
+    .option("--fail-closed", "Deny on invalid local policy", false)
+    .option("--json", "Emit JSON", false)
+    .argument("[path]", "Repository path (ignored when -- separates args; use cwd)")
+    .argument("[command...]", "Command argv after --")
+    .allowUnknownOption(false)
+    .action(
+      async (pathArg: string | undefined, commandParts: string[] | undefined, cmd: Command) => {
+        const options = cmd.opts() as {
+          shell?: boolean;
+          timeout?: string;
+          failClosed?: boolean;
+          json?: boolean;
+        };
+        // Commander may put path as first arg when no `--`; prefer argv after `--` via raw args.
+        const raw = cmd.args as string[];
+        let root = process.cwd();
+        let argv: string[] = [];
+        // If first token looks like a path-only invocation without command, treat as root.
+        if (commandParts && commandParts.length > 0) {
+          argv = commandParts;
+          if (pathArg) root = resolveTargetArgument(pathArg);
+        } else if (pathArg && !pathArg.startsWith("-")) {
+          // `run npm --version` style: pathArg is actually first command token
+          argv = [pathArg, ...(raw.slice(1) ?? [])];
+        }
+        // Prefer explicit `--` remainder from process.argv
+        const dd = process.argv.indexOf("--");
+        if (dd >= 0) {
+          argv = process.argv.slice(dd + 1);
+          root = process.cwd();
+        }
+        const timeoutMs = Number(options.timeout ?? 30000);
+        process.exitCode = await runRunCommand({
+          root: resolveTargetArgument(root),
+          argv,
+          shell: Boolean(options.shell),
+          timeoutMs: Number.isFinite(timeoutMs) ? timeoutMs : 30000,
+          failClosed: Boolean(options.failClosed),
+          json: Boolean(options.json),
+        });
+      },
+    );
+
+  const workspace = program
+    .command("workspace")
+    .description("Multi-repo workspace model under .agentdoctor/workspaces/ (local isolation)");
+  workspace
+    .command("init")
+    .description("Create a workspace JSON record")
+    .requiredOption("--name <name>", "Workspace display name")
+    .option("--id <id>", "Optional workspace id")
+    .option("--repo <path>", "Initial repository root to add")
+    .option("--allow-cross-read", "Allow reading other member repos (default false)", false)
+    .argument("[path]", "Control root (stores .agentdoctor/workspaces)")
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: {
+          name: string;
+          id?: string;
+          repo?: string;
+          allowCrossRead?: boolean;
+          json?: boolean;
+        },
+      ) => {
+        process.exitCode = await runWorkspaceCommand({
+          action: "init",
+          root: resolveTargetArgument(pathArg),
+          name: options.name,
+          ...(options.id ? { id: options.id } : {}),
+          ...(options.repo ? { repositoryRoot: resolveTargetArgument(options.repo) } : {}),
+          allowCrossRead: Boolean(options.allowCrossRead),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  workspace
+    .command("add")
+    .description("Add a repository root to a workspace")
+    .requiredOption("--id <id>", "Workspace id")
+    .requiredOption("--repo <path>", "Repository root to add")
+    .argument("[path]", "Control root")
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: { id: string; repo: string; json?: boolean },
+      ) => {
+        process.exitCode = await runWorkspaceCommand({
+          action: "add",
+          root: resolveTargetArgument(pathArg),
+          id: options.id,
+          repositoryRoot: resolveTargetArgument(options.repo),
+          json: Boolean(options.json),
+        });
+      },
+    );
+  workspace
+    .command("list")
+    .description("List workspaces")
+    .argument("[path]", "Control root")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runWorkspaceCommand({
+        action: "list",
+        root: resolveTargetArgument(pathArg),
+        json: Boolean(options.json),
+      });
+    });
+  workspace
+    .command("status")
+    .description("Show workspace membership and missing roots")
+    .requiredOption("--id <id>", "Workspace id")
+    .argument("[path]", "Control root")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { id: string; json?: boolean }) => {
+      process.exitCode = await runWorkspaceCommand({
+        action: "status",
+        root: resolveTargetArgument(pathArg),
+        id: options.id,
+        json: Boolean(options.json),
+      });
+    });
+  workspace
+    .command("remove")
+    .description("Delete a workspace record")
+    .requiredOption("--id <id>", "Workspace id")
+    .argument("[path]", "Control root")
+    .option("--json", "Emit JSON", false)
+    .action(async (pathArg: string | undefined, options: { id: string; json?: boolean }) => {
+      process.exitCode = await runWorkspaceCommand({
+        action: "remove",
+        root: resolveTargetArgument(pathArg),
+        id: options.id,
         json: Boolean(options.json),
       });
     });
@@ -875,15 +1501,25 @@ export function createProgram(): Command {
     });
   platform
     .command("test-impact")
-    .description("Analyze which tests likely relate to git changes (heuristic; does not run tests)")
+    .description(
+      "Analyze which tests relate to git changes (heuristic; coverage-backed with --coverage; does not run tests)",
+    )
     .argument("[path]", "Repository path")
+    .option("--coverage <path>", "LCOV / Istanbul JSON / Cobertura XML coverage file")
+    .option("--since <ref>", "Diff since git ref")
     .option("--json", "Emit JSON", false)
     .action(async (pathArg: string | undefined, _options, command: Command) => {
-      const options = command.optsWithGlobals() as { json?: boolean };
+      const options = command.optsWithGlobals() as {
+        json?: boolean;
+        coverage?: string;
+        since?: string;
+      };
       process.exitCode = await runPlatformCommand({
         action: "test-impact",
         root: resolveTargetArgument(pathArg),
         json: Boolean(options.json),
+        ...(options.coverage ? { coverage: options.coverage } : {}),
+        ...(options.since ? { since: options.since } : {}),
       });
     });
 

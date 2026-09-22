@@ -123,7 +123,7 @@ export interface PolicyDecisionContract {
   inputClassification: string;
   evidence: EvidenceRef[];
   riskLevel: Severity;
-  executionStatus: "not-executed" | "executed" | "blocked-by-enforcement";
+  executionStatus: "not-executed" | "executed" | "blocked-by-enforcement" | "execution-failed";
   approvalStatus: "not-required" | "pending" | "approved" | "denied";
   timestamp: string;
 }
@@ -186,9 +186,9 @@ export interface FeatureFlags {
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   typescriptAst: true,
-  sqliteStorage: false,
+  sqliteStorage: true,
   teamMode: false,
-  enforcementRunner: false,
+  enforcementRunner: true,
   vectorSearch: false,
   architectureC4: true,
 };
