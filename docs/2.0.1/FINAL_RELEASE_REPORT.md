@@ -7,7 +7,7 @@ Version: `2.0.1`
 Git commit (release): `c73436afdc8dc146ca0d7c210e7f1d1627676543` — `release: AgentDoctor 2.0.1`  
 Git tag: `v2.0.1` (annotated; object `865fb668bb9ce0601bf70f98ff13d844986ecce3`)  
 Branch: `main` → `origin/main`  
-GitHub Release: https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.1  
+GitHub Release: https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.1
 
 Follow-up (post-tag, required for CI / complete tree):
 
@@ -18,31 +18,31 @@ Follow-up (post-tag, required for CI / complete tree):
 
 ## Pre-release verification (local)
 
-| Check | Result |
-| --- | --- |
-| `npm run verify` | **PASS** |
-| Tests | **70** files / **451** tests — PASS |
-| Typecheck / lint / format / build | PASS |
-| `npm pack --dry-run` | **2.0.1**, ~328.9 kB, **550** files, unpacked ~1.4 MB |
+| Check                             | Result                                                |
+| --------------------------------- | ----------------------------------------------------- |
+| `npm run verify`                  | **PASS**                                              |
+| Tests                             | **70** files / **451** tests — PASS                   |
+| Typecheck / lint / format / build | PASS                                                  |
+| `npm pack --dry-run`              | **2.0.1**, ~328.9 kB, **550** files, unpacked ~1.4 MB |
 
 ## Git release
 
-| Step | Status |
-| --- | --- |
-| Commit | **PASS** (`c73436a`) |
+| Step         | Status                                    |
+| ------------ | ----------------------------------------- |
+| Commit       | **PASS** (`c73436a`)                      |
 | Tag `v2.0.1` | **PASS** (created; did not already exist) |
-| Push `main` | **PASS** (`dd102b6..c73436a`) |
-| Push tag | **PASS** |
-| Remote tag | **PASS** — `git ls-remote` shows `v2.0.1` |
+| Push `main`  | **PASS** (`dd102b6..c73436a`)             |
+| Push tag     | **PASS**                                  |
+| Remote tag   | **PASS** — `git ls-remote` shows `v2.0.1` |
 
 ## npm release
 
-| Step | Status |
-| --- | --- |
-| `npm whoami` | `praneeth_54` |
-| Pre-check `npm view …@2.0.1` | **404** (not already published — safe to publish) |
-| Registry `latest` before publish | **2.0.0** |
-| `npm publish` | **BLOCKED — EOTP** |
+| Step                             | Status                                            |
+| -------------------------------- | ------------------------------------------------- |
+| `npm whoami`                     | `praneeth_54`                                     |
+| Pre-check `npm view …@2.0.1`     | **404** (not already published — safe to publish) |
+| Registry `latest` before publish | **2.0.0**                                         |
+| `npm publish`                    | **BLOCKED — EOTP**                                |
 
 Exact error (stopped per safety rules; no `--force`, no retry with invented OTP):
 
@@ -82,35 +82,35 @@ npm view @praneeth_54/agentdoctor version   # expect 2.0.1 (may lag briefly)
 
 ## GitHub
 
-| Item | Status |
-| --- | --- |
-| Remote `main` at release SHA | YES (`c73436a`) |
-| Remote tag `v2.0.1` | YES |
-| GitHub Release | **YES** — https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.1 |
-| CI on release push | **FAILURE** — https://github.com/pranee54/AgentDoctor/actions/runs/35779240600 |
-| CI failure cause | `Cannot find module './coverage/load.js'` because `src/coverage/` was ignored by `coverage/` in `.gitignore` |
-| CodeQL | in progress / not used as success claim |
-| Marketplace | **MANUAL ACTION REQUIRED** (unchanged) |
+| Item                         | Status                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Remote `main` at release SHA | YES (`c73436a`)                                                                                              |
+| Remote tag `v2.0.1`          | YES                                                                                                          |
+| GitHub Release               | **YES** — https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.1                                        |
+| CI on release push           | **FAILURE** — https://github.com/pranee54/AgentDoctor/actions/runs/35779240600                               |
+| CI failure cause             | `Cannot find module './coverage/load.js'` because `src/coverage/` was ignored by `coverage/` in `.gitignore` |
+| CodeQL                       | in progress / not used as success claim                                                                      |
+| Marketplace                  | **MANUAL ACTION REQUIRED** (unchanged)                                                                       |
 
 ## Known limitations (preserved)
 
 Do **not** claim zero gaps. External / intentional boundaries remain, including:
 
-1. Browser OAuth / full IdP login UX — EXPERIMENTAL  
-2. Postgres without live `AGENTDOCTOR_POSTGRES_URL` / CI service — EXTERNAL  
-3. Java / Kotlin / Rust / Dart (and Go extractor) AST — EXTERNAL  
-4. IDE / agent process interception — EXTERNAL  
-5. Engineering correctness / compliance certificates from hash integrity — never claimed  
-6. Hosted SaaS, HSM, vector production backend — EXTERNAL / out of boundary  
+1. Browser OAuth / full IdP login UX — EXPERIMENTAL
+2. Postgres without live `AGENTDOCTOR_POSTGRES_URL` / CI service — EXTERNAL
+3. Java / Kotlin / Rust / Dart (and Go extractor) AST — EXTERNAL
+4. IDE / agent process interception — EXTERNAL
+5. Engineering correctness / compliance certificates from hash integrity — never claimed
+6. Hosted SaaS, HSM, vector production backend — EXTERNAL / out of boundary
 
 See: [limitations.md](limitations.md) · [FINAL_COMPLETION_AUDIT.md](FINAL_COMPLETION_AUDIT.md).
 
 ## Remaining items
 
-1. Human `npm publish --otp=<code>` for `@praneeth_54/agentdoctor@2.0.1` from HEAD (after coverage fix).  
-2. Registry confirm + clean install smoke under `/tmp/agentdoctor-2.0.1-published-verification`.  
-3. Confirm CI green on follow-up commit that adds `src/coverage/`.  
-4. Optional: Marketplace UI listing.  
+1. Human `npm publish --otp=<code>` for `@praneeth_54/agentdoctor@2.0.1` from HEAD (after coverage fix).
+2. Registry confirm + clean install smoke under `/tmp/agentdoctor-2.0.1-published-verification`.
+3. Confirm CI green on follow-up commit that adds `src/coverage/`.
+4. Optional: Marketplace UI listing.
 5. Optional later: annotated tag alignment / patch if consumers need tag SHA == full tree (no force-move in this session).
 
 ## Final status
