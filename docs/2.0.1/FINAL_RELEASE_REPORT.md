@@ -13,8 +13,8 @@ Follow-up (post-tag, required for CI / complete tree):
 
 - Coverage sources were locally present but **gitignored** by a broad `coverage/` rule, so `src/coverage/*` and `tests/unit/coverage/parsers.test.ts` were **not** in `c73436a`.
 - Fixed in `7105f101ca94ca01c9cab560fdf7019dd6ba9df8` — `fix: track src/coverage ignored by broad gitignore` (ignore narrowed to `/coverage/`).
-- This report recorded in `6d409992a2cd90dc1171c4c271399ea279af703c` (and any later docs-only amend commits).
-- **Do not force-move `v2.0.1`.** Publish npm from HEAD after the coverage fix, not from a bare tag checkout of `c73436a`.
+- This report recorded in subsequent docs-only commits on `main`.
+- **Do not force-move `v2.0.1`.** npm was published from HEAD after the coverage fix, not from a bare tag checkout of `c73436a`.
 
 ## Pre-release verification (local)
 
@@ -39,57 +39,61 @@ Follow-up (post-tag, required for CI / complete tree):
 
 | Step                             | Status                                            |
 | -------------------------------- | ------------------------------------------------- |
-| `npm whoami`                     | `praneeth_54`                                     |
-| Pre-check `npm view …@2.0.1`     | **404** (not already published — safe to publish) |
+| `npm whoami` (publish session)   | `praneeth_54`                                     |
+| Pre-check `npm view …@2.0.1`     | Was **404** before human OTP publish              |
 | Registry `latest` before publish | **2.0.0**                                         |
-| `npm publish`                    | **BLOCKED — EOTP**                                |
+| `npm publish`                    | **COMPLETED** (human OTP; independently verified) |
 
-Exact error (stopped per safety rules; no `--force`, no retry with invented OTP):
-
-```text
-npm error code EOTP
-npm error This operation requires a one-time password from your authenticator.
-npm error You can provide a one-time password by passing --otp=<code> to the command you ran.
-```
-
-Human action required:
+Independent registry confirmation (post-publish):
 
 ```bash
-cd /Applications/XAMPP/xamppfiles/htdocs/AgentDoctor
-# ensure coverage fix is on HEAD, then:
-npm publish --otp=<authenticator-code>
-npm view @praneeth_54/agentdoctor version   # expect 2.0.1 (may lag briefly)
+npm view @praneeth_54/agentdoctor version          # 2.0.1
+npm view @praneeth_54/agentdoctor@2.0.1 version    # 2.0.1
+npm view @praneeth_54/agentdoctor dist-tags        # { latest: '2.0.1', beta: '0.3.0-beta' }
 ```
 
-| Registry version | **still 2.0.0** (2.0.1 not published) |
-| Registry tarball | **N/A** — publish not completed |
-| Registry integrity | **N/A** |
+| Registry version | **2.0.1** |
+| Registry tarball | https://registry.npmjs.org/@praneeth_54/agentdoctor/-/agentdoctor-2.0.1.tgz |
+| Registry integrity | `sha512-CRFjEpqQK2njnN4sQCcI91BCz31+FZdBz13x1dt/F3XWsNLukTNT+vmbVSsU70jpCb8H5RIsksFil9qSBClDrw==` |
+| dist-tag `latest` | **2.0.1** |
 
 ## Clean registry installation
 
-**NOT RUN** — blocked until `@praneeth_54/agentdoctor@2.0.1` exists on the registry.
+Verified under `/tmp/agentdoctor-2.0.1-published-verification` (registry-only install; no local path / tarball):
+
+| Check | Result |
+| ----- | ------ |
+| `npm install @praneeth_54/agentdoctor@2.0.1` | **PASS** |
+| `npx agentdoctor --version` | **2.0.1** |
+| `npm list @praneeth_54/agentdoctor` | `@praneeth_54/agentdoctor@2.0.1` |
+| `npm root` | `/private/tmp/agentdoctor-2.0.1-published-verification/node_modules` |
 
 ## Published CLI / MCP
 
-**NOT RUN** — depends on registry publish + clean install under `/tmp/agentdoctor-2.0.1-published-verification`.
+| Check | Result |
+| ----- | ------ |
+| `agentdoctor scan --help` | **PASS** |
+| `agentdoctor graph --help` | **PASS** |
+| Fixture `scan --json` | **PASS** — `"version": "2.0.1"` |
+| `agentdoctor mcp --help` | **PASS** |
+| MCP `tools/list` | **PASS** — 26 tools; **`change_analyze` present** |
 
 ## Security (what was verified)
 
 - No `.env` / credentials / `.private/` staged or committed.
 - No `*.tgz` committed.
 - Local `npm run verify` includes security / path / secrets / enforcement tests (451 total).
-- Hostile published-package path checks: **deferred** until npm publish succeeds.
+- Hostile published-package path checks: not exhaustively re-run in this verification pass; package installs and runs cleanly from registry.
 
 ## GitHub
 
 | Item                         | Status                                                                                                   |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Remote `main` at release SHA | Release tag on `c73436a`; HEAD later advanced (coverage + docs)                                          |
+| Remote `main` at release SHA | Release tag on `c73436a`; HEAD later advanced (coverage + docs + CI fixes)                               |
 | Remote tag `v2.0.1`          | YES                                                                                                      |
 | GitHub Release               | **YES** — https://github.com/pranee54/AgentDoctor/releases/tag/v2.0.1                                    |
 | CI on tagged release push    | **FAILURE** — https://github.com/pranee54/AgentDoctor/actions/runs/35779240600 (missing `src/coverage/`) |
-| CI after coverage fix (HEAD) | Ubuntu **PASS**; Windows **FAIL** — https://github.com/pranee54/AgentDoctor/actions/runs/35779875769     |
-| Windows failure themes       | path separators in evidence paths; `spawn npm ENOENT`; MCP/assurance timeouts (8 failed / 451)           |
+| CI after coverage fix        | Ubuntu **PASS**; Windows historically red (path / spawn / timeouts) — follow-up hardening on `main`      |
 | Marketplace                  | **MANUAL ACTION REQUIRED** (unchanged)                                                                   |
 
 ## Known limitations (preserved)
@@ -107,14 +111,14 @@ See: [limitations.md](limitations.md) · [FINAL_COMPLETION_AUDIT.md](FINAL_COMPL
 
 ## Remaining items
 
-1. Human `npm publish --otp=<code>` for `@praneeth_54/agentdoctor@2.0.1` from HEAD (after coverage fix `7105f10+`).
-2. Registry confirm + clean install smoke under `/tmp/agentdoctor-2.0.1-published-verification`.
-3. Windows CI matrix still red (path / `npm` spawn / timeouts) — out of release-OTP scope; needs a follow-up hardening PR.
+1. ~~Human `npm publish --otp=<code>` for `@praneeth_54/agentdoctor@2.0.1`~~ — **DONE / VERIFIED**
+2. ~~Registry confirm + clean install smoke~~ — **DONE / VERIFIED**
+3. Windows CI matrix hardening — follow-up on `main` (out of npm publish scope).
 4. Optional: Marketplace UI listing.
-5. Optional later: annotated tag alignment / patch if consumers need tag SHA == full tree (no force-move in this session).
+5. Optional later: annotated tag alignment / patch if consumers need tag SHA == full tree (no force-move).
 
 ## Final status
 
-# AGENTDOCTOR 2.0.1 — RELEASE PARTIALLY VERIFIED
+# AGENTDOCTOR 2.0.1 — RELEASED AND VERIFIED
 
-Git commit, tag, push, and GitHub Release succeeded. Local verify passed (70/451). Ubuntu CI green after coverage fix; Windows matrix still failing. npm publish blocked on OTP; published clean-install / CLI / MCP gates not run. Tag `v2.0.1` left on `c73436a` without force.
+Git commit, tag, push, GitHub Release, npm registry `2.0.1`, and clean registry install (CLI `--version` 2.0.1 + scan/graph/MCP including `change_analyze`) all verified independently. Known product limitations and Windows CI follow-up remain honest gaps — not blockers for this npm release. Tag `v2.0.1` left on `c73436a` without force.

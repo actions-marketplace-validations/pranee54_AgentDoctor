@@ -9,7 +9,7 @@ Understand your codebase, assess the impact of changes, govern engineering knowl
 [![Node](https://img.shields.io/node/v/@praneeth_54/agentdoctor)](https://nodejs.org)
 [![License](https://img.shields.io/github/license/pranee54/AgentDoctor)](LICENSE)
 
-**In-repo cut:** `2.0.1` (publish pending human authorization). Last published: [`@praneeth_54/agentdoctor@2.0.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
+**Published:** [`@praneeth_54/agentdoctor@2.0.1`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
 
 [Install](#install) · [Quickstart](#quickstart) · [Change assurance](#change-assurance) · [Documentation](docs/2.0.1/README.md) · [MCP](#mcp) · [GitHub Action](#github-action) · [Architecture](#architecture)
 
@@ -217,11 +217,9 @@ Canonical docs: [docs/2.0/overview/architecture.md](docs/2.0/overview/architectu
 Requires **Node.js 20+**.
 
 ```bash
-# Local/RC version is 2.0.1; npm registry may still show 2.0.0 until published.
-npm install -g @praneeth_54/agentdoctor@2.0.1   # after publish
-# or from a packed tarball / this repo:
-# npm install /path/to/praneeth_54-agentdoctor-2.0.1.tgz
-npx @praneeth_54/agentdoctor@2.0.1 --help       # after publish
+npm install -g @praneeth_54/agentdoctor@2.0.1
+# or:
+npx @praneeth_54/agentdoctor@2.0.1 --help
 ```
 
 From source:
