@@ -1,32 +1,34 @@
 # AgentDoctor 2.0 — Readiness Matrix
 
-A **5/5** claim requires evidence across implementation, tests, accuracy, performance, security, deployment, and independent validation.
+Honest readiness for published **`@praneeth_54/agentdoctor@2.0.0`**.
 
-**Release-candidate audit (2026-09-21):** verify **53/394 PASS**; packed clean-install smoke PASS; version remains **1.1.1**.
-**Publish recommendation:** begin formal 2.0.0 process; **do not publish 2.0.0 until blockers in `AGENTDOCTOR_2.0_RELEASE_BLOCKERS.md` are cleared.**
+Do **not** use star ratings (`5/5`), “best”, or “guaranteed”. Prefer: **SUPPORTED** · **PARTIAL** · **EXPERIMENTAL** · **PLANNED** · **NOT YET SUPPORTED**.
 
-| Capability                   | Impl     | Tests          | Accuracy         | Perf                           | Security                                   | Deploy     | Independent | Classification                                            |
-| ---------------------------- | -------- | -------------- | ---------------- | ------------------------------ | ------------------------------------------ | ---------- | ----------- | --------------------------------------------------------- |
-| Safety layer                 | Y        | Y              | Y                | Y                              | Y                                          | Y          | Y           | Complete and verified                                     |
-| Brain MCP (legacy tools)     | Y        | Y              | partial          | Y                              | Y                                          | Y          | Y           | Complete and verified                                     |
-| Shared contracts             | Y        | Y              | n/a              | n/a                            | n/a                                        | Y          | N           | Implemented but partially validated                       |
-| Repository Brain init/review | Y        | Y              | n/a              | n/a                            | Y (lifecycle)                              | Y          | N           | Implemented but partially validated                       |
-| TS AST graph                 | Y        | Y              | partial          | measured (synthetic 120 files) | path/symlink hardened                      | Y (packed) | N           | Implemented but partially validated                       |
-| Git intelligence             | Y        | Y              | method disclosed | unmeasured                     | n/a                                        | Y          | N           | Implemented but partially validated                       |
-| C4 views                     | Y        | Y              | inferred         | n/a                            | labeled                                    | Y          | N           | Experimental                                              |
-| Combined MCP intelligence    | Y        | Y (STDIO)      | partial          | unmeasured                     | path_escape + evaluate-only                | Y (packed) | N           | Implemented but partially validated                       |
-| Knowledge governance         | Y        | Y (abstention) | abstention       | n/a                            | approval gated                             | Y          | N           | Implemented but partially validated                       |
-| Enforcement runner           | Y        | Y (honesty)    | n/a              | n/a                            | blocked-by-enforcement scoped              | Y          | N           | Implemented but partially validated                       |
-| Local-dev team auth          | Y        | Y              | n/a              | n/a                            | scrypt; not SSO                            | Y          | N           | Implemented but partially validated                       |
-| Dashboard `/api/v2`          | Y        | Y              | n/a              | unmeasured                     | loopback + hostile path                    | Y (packed) | N           | Implemented but partially validated                       |
-| npm pack / clean install     | Y        | smoke          | n/a              | n/a                            | n/a                                        | Y          | smoke       | Implemented but partially validated                       |
-| Public docs for 2.0 (npm)    | partial  | N              | n/a              | n/a                            | README limitations OK; deep docs on GitHub | N          | N           | **Option B chosen for prep** — must reaffirm at 2.0.0 cut |
-| SQLite/Postgres              | stub     | N              | N                | N                              | N                                          | N          | N           | Partially implemented                                     |
-| Vector search                | flag off | N              | N                | N                              | N                                          | N          | N           | Unsupported                                               |
-| Enterprise SSO               | N        | N              | N                | N                              | N                                          | N          | N           | Blocked by external dependency                            |
-| Multi-language AST           | N        | N              | N                | N                              | N                                          | N          | N           | Unsupported                                               |
-| IDE interception             | N        | N              | N                | N                              | N                                          | N          | N           | Unsupported                                               |
+**Evidence baseline:** `npm run verify` — 53 files / 394 tests PASS; packed clean-install smoke PASS; npm `latest` = `2.0.0` (see [final-release-report.md](../release/final-release-report.md)).
+
+| Capability                                           | Classification    | Evidence / notes                                  |
+| ---------------------------------------------------- | ----------------- | ------------------------------------------------- |
+| Safety layer (scan / fix / verify / policy / Action) | SUPPORTED         | Preserved 1.x contract; CI + Action pins `2.0.0`  |
+| Brain MCP (`brain_*`, STDIO)                         | SUPPORTED         | Tool names stable; provenance envelopes           |
+| Shared contracts                                     | PARTIAL           | Implemented; partially validated                  |
+| Repository Brain init / review                       | PARTIAL           | Proposals never auto-approved                     |
+| TS/JS AST graph                                      | PARTIAL           | Synthetic perf sample; path/symlink hardened      |
+| Git intelligence                                     | PARTIAL           | Method disclosed; perf unmeasured at scale        |
+| C4 views                                             | EXPERIMENTAL      | Inferred; labeled                                 |
+| Combined MCP intelligence                            | PARTIAL           | STDIO tests; path escape + evaluate-only          |
+| Knowledge governance                                 | PARTIAL           | Abstention without approval                       |
+| Enforcement runner                                   | PARTIAL           | Honesty tests; not IDE interception               |
+| Local-dev team auth                                  | PARTIAL           | scrypt; **not SSO**                               |
+| Dashboard `/api/v2`                                  | PARTIAL           | Loopback + hostile-path checks                    |
+| npm pack / clean install                             | SUPPORTED         | Published `2.0.0` smoke PASS                      |
+| Public docs for 2.0                                  | PARTIAL           | Option B: deep docs on GitHub, not in npm tarball |
+| SQLite / Postgres                                    | NOT YET SUPPORTED | Stubbed                                           |
+| Vector search                                        | NOT YET SUPPORTED | Flag off                                          |
+| Enterprise SSO                                       | NOT YET SUPPORTED | External dependency / product scope               |
+| Multi-language AST                                   | NOT YET SUPPORTED | TS/JS depth only                                  |
+| IDE interception                                     | NOT YET SUPPORTED | Not claimed                                       |
+| Change Proof runtime                                 | PLANNED           | Design direction only                             |
 
 ## Product readiness statement
 
-In-tree AgentDoctor 2.0 capabilities are substantially implemented, verified at **1.1.1**, and installable from a packed artifact. They are **not** yet packaged/documented as a coherent public **2.0.0** release. No capability is auto-promoted to 5/5 by this RC audit.
+AgentDoctor **2.0.0** is a published open-source release combining Safety, Brain MCP, repository intelligence, and agent interfaces. Maturity varies by layer — use this matrix and [capabilities.md](capabilities.md) rather than blanket “production-ready” claims.

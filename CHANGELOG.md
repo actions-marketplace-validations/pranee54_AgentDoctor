@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Notes
+### Changed
 
-- Post-cut work only. Version cut for **2.0.0** is recorded below (not yet
-  committed, tagged, or published unless a human does so separately).
+- Professional product presentation: README hero, capability map, architecture,
+  MCP / Action / security sections, and docs/2.0 index aligned to published
+  **2.0.0** (SUPPORTED / PARTIAL / EXPERIMENTAL / NOT YET SUPPORTED labels).
+- CLI program description updated to match 2.0 positioning.
+- CONTRIBUTING / ROADMAP refreshed for AgentDoctor 2.0; Change Proof documented
+  as planned design direction only.
 
 ## [2.0.0] — 2026-09-21
 

@@ -23,15 +23,16 @@ docs/
 
 ## AgentDoctor 2.0 (start here for current product)
 
-| Document                                                                 | Description                      |
-| ------------------------------------------------------------------------ | -------------------------------- |
-| [2.0/README.md](2.0/README.md)                                           | **2.0 documentation index**      |
-| [2.0/overview/readiness-matrix.md](2.0/overview/readiness-matrix.md)     | Honest readiness classifications |
-| [2.0/overview/known-limitations.md](2.0/overview/known-limitations.md)   | Unsupported / partial claims     |
-| [2.0/guides/cli.md](2.0/guides/cli.md)                                   | CLI surfaces                     |
-| [2.0/guides/mcp.md](2.0/guides/mcp.md)                                   | Brain + combined MCP             |
-| [2.0/audits/release-blockers.md](2.0/audits/release-blockers.md)         | What blocks npm 2.0.0 publish    |
-| [2.0/release/public-release-plan.md](2.0/release/public-release-plan.md) | Public release preparation       |
+| Document                                                                   | Description                      |
+| -------------------------------------------------------------------------- | -------------------------------- |
+| [2.0/README.md](2.0/README.md)                                             | **2.0 documentation index**      |
+| [2.0/overview/capabilities.md](2.0/overview/capabilities.md)               | Capability map (status labels)   |
+| [2.0/overview/readiness-matrix.md](2.0/overview/readiness-matrix.md)       | Honest readiness classifications |
+| [2.0/overview/known-limitations.md](2.0/overview/known-limitations.md)     | Unsupported / partial claims     |
+| [2.0/guides/cli.md](2.0/guides/cli.md)                                     | CLI surfaces                     |
+| [2.0/guides/mcp.md](2.0/guides/mcp.md)                                     | Brain + combined MCP             |
+| [2.0/guides/github-action.md](2.0/guides/github-action.md)                 | GitHub Action inputs / examples  |
+| [2.0/release/final-release-report.md](2.0/release/final-release-report.md) | Verified 2.0.0 release evidence  |
 
 Root pointer: [../AGENTDOCTOR_2.0.md](../AGENTDOCTOR_2.0.md).
 

@@ -1,13 +1,13 @@
 # AgentDoctor Roadmap
 
-AgentDoctor is evolving from repository analysis into an **evidence-backed context layer for AI coding agents**.
+AgentDoctor provides **engineering intelligence and safety for AI coding agents** — repository understanding, knowledge governance, safety controls, MCP interfaces, and verification evidence.
 
 ```text
-Today (shipped)
-Repository → Project Understanding → Project Brain → MCP → AI Agent
+Today (shipped — 2.0.0)
+Repository → Understand → Analyze → Govern → Change → Verify → Evidence
 
 Direction (not shipped)
-Project Brain → Agent Context → Agent Reliability → Agent-Aware Development Infrastructure
+Evidence packages (“Change Proof”) → Agent Context → Agent Reliability → Team-scale intelligence
 ```
 
 Status legend:
@@ -22,20 +22,21 @@ This document is milestone-based. It does **not** promise calendar dates.
 
 ## Priority
 
-| Priority | Direction                                                                         | Status               |
-| -------- | --------------------------------------------------------------------------------- | -------------------- |
-| P0       | Safety Scan → Fix → Verify → CI                                                   | 🟢 Shipped (`1.0.x`) |
-| P0       | Project Brain stability (claims, evidence, confidence, UNKNOWN, snapshots/deltas) | 🟢 Shipped (`1.1.0`) |
-| P0       | Brain MCP reliability (STDIO, 10 tools, provenance, security controls)            | 🟢 Shipped (`1.1.0`) |
-| P0       | Developer adoption (quickstart, demos, Brain-quality feedback loop)               | 🟡 Next (process)    |
-| P1       | Agent Context layer (task-relevant context packaging)                             | 🟡 Planned           |
-| P1       | Context freshness / stale-context detection                                       | 🟡 Planned           |
-| P1       | Change-aware agent context (Brain Delta evolution)                                | 🟡 Planned           |
-| P1       | Agent reliability surfaces (pre/post-change risk, invalidation)                   | 🟡 Planned           |
-| P2       | CI / pull-request Brain analysis                                                  | 🔵 Exploratory       |
-| P2       | Team-scale Project Intelligence                                                   | 🔵 Exploratory       |
-| P3       | Additional MCP transports beyond STDIO                                            | 🔵 Exploratory       |
-| P3       | Optional telemetry / key-gated AI-assisted analysis                               | 🔵 Exploratory       |
+| Priority | Direction                                                           | Status                |
+| -------- | ------------------------------------------------------------------- | --------------------- |
+| P0       | Safety Scan → Fix → Verify → CI                                     | 🟢 Shipped (`1.0.x`+) |
+| P0       | Project Brain + Brain MCP                                           | 🟢 Shipped (`1.1.0`+) |
+| P0       | AgentDoctor 2.0 (intelligence, combined MCP, knowledge, Action pin) | 🟢 Shipped (`2.0.0`)  |
+| P0       | Developer adoption (docs clarity, honest capability labels)         | 🟡 Next (process)     |
+| P1       | Change Proof evidence records                                       | 🟡 Planned            |
+| P1       | Agent Context layer (task-relevant context packaging)               | 🟡 Planned            |
+| P1       | Context freshness / stale-context detection                         | 🟡 Planned            |
+| P1       | Change-aware agent context (Brain Delta evolution)                  | 🟡 Planned            |
+| P1       | Agent reliability surfaces (pre/post-change risk, invalidation)     | 🟡 Planned            |
+| P2       | CI / pull-request Brain analysis                                    | 🔵 Exploratory        |
+| P2       | Team-scale Project Intelligence                                     | 🔵 Exploratory        |
+| P3       | Additional MCP transports beyond STDIO                              | 🔵 Exploratory        |
+| P3       | Optional telemetry / key-gated AI-assisted analysis                 | 🔵 Exploratory        |
 
 Safety precision work continues in parallel: prefer corpus-backed, measurable improvements over large architectural rewrites ([docs/reference/scoring.md](docs/reference/scoring.md), [docs/reference/compatibility.md](docs/reference/compatibility.md)).
 
@@ -97,6 +98,26 @@ AgentDoctor
 - Cross-platform CI hardening during the 1.1.0 release train
 
 Docs: [docs/features/project-brain.md](docs/features/project-brain.md) · [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md) · [docs/release-notes/v1.1.0.md](docs/release-notes/v1.1.0.md)
+
+---
+
+## 2.0.0 — Engineering intelligence release — 🟢 Shipped
+
+Published as [`@praneeth_54/agentdoctor@2.0.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor).
+
+Adds repository intelligence (AST graph, Git hotspots, impact), Repository Brain proposals, governed knowledge, combined MCP, local dashboard / API surfaces, and Action default pin `2.0.0` — while preserving Safety CLI contracts and Brain MCP tool names.
+
+Canonical docs: [docs/2.0/README.md](docs/2.0/README.md) · readiness: [docs/2.0/overview/readiness-matrix.md](docs/2.0/overview/readiness-matrix.md)
+
+---
+
+## Change Proof — 🟡 Planned (design direction)
+
+**Not implemented as a runtime product.**
+
+A future change record could attach evidence to an AI-driven change: agent, request, changed files/symbols, callers, tests, policies, ADRs, verification, and security results. Treat as **design direction** only — see README “Roadmap / design direction: Change Proof”.
+
+Do not document Change Proof as a current CLI or MCP feature.
 
 ---
 

@@ -1,266 +1,359 @@
 # AgentDoctor
 
-**Codebase intelligence for developers, agents, and engineering teams.**
+### Engineering Intelligence & Safety for AI Coding Agents
 
-Local-first tooling that helps you understand a repository, keep AI coding agents safer, and query evidence-backed project knowledge — without requiring a cloud account or API key.
+**Understand → Analyze → Govern → Change → Verify → Prove**
+
+Understand your codebase, evaluate the impact of changes, govern engineering knowledge, enforce safety policies, and verify AI-generated changes with evidence.
 
 [![npm](https://img.shields.io/npm/v/@praneeth_54/agentdoctor?label=npm)](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
 [![CI](https://img.shields.io/github/actions/workflow/status/pranee54/AgentDoctor/ci.yml?branch=main&label=CI)](https://github.com/pranee54/AgentDoctor/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/node/v/@praneeth_54/agentdoctor)](https://nodejs.org)
 [![License](https://img.shields.io/github/license/pranee54/AgentDoctor)](LICENSE)
 
-**Published package:** `@praneeth_54/agentdoctor@`**2.0.0**
+**Published:** [`@praneeth_54/agentdoctor@2.0.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
 
-[Documentation index](docs/README.md) · [AgentDoctor 2.0 docs](docs/2.0/README.md) · [Known limitations](docs/2.0/overview/known-limitations.md) · [Readiness matrix](docs/2.0/overview/readiness-matrix.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md)
+[Install](#install) · [Quickstart](#quickstart) · [Documentation](docs/2.0/README.md) · [MCP](#mcp) · [GitHub Action](#github-action) · [Architecture](#architecture)
 
 ---
 
-## What AgentDoctor does
+## What AgentDoctor is
 
-AgentDoctor combines three complementary layers:
+AgentDoctor sits between developers / AI coding agents and the repository’s engineering reality.
 
-1. **Safety** — audit and safely fix AI coding-agent configuration (scan → fix → verify → policy → CI).
-2. **Repository Brain** — evidence-backed claims, proposals, human review, and Project Brain MCP tools.
-3. **Codebase intelligence** — TypeScript/JavaScript AST graphs, git hotspots, impact analysis, knowledge governance, evaluate-only policy, and a combined MCP server.
+AI agents can write code quickly. The harder engineering problem is knowing whether a change is **correct, safe, compatible, explainable, and consistent** with the rest of the repository.
 
-It is **not** an autonomous coding agent, chatbot, or IDE process interceptor. It does **not** block Cursor/Claude/Codex unless you deliberately run commands through AgentDoctor’s controlled runner.
+AgentDoctor collects repository signals — source structure, graphs, Git history, policies, knowledge, and verification evidence — so humans and agents can reason about changes with fewer unsupported assumptions.
+
+It is **not** an autonomous coding agent, chatbot, or IDE interceptor. It does **not** guarantee correctness. It produces **evidence and controls** you can inspect.
+
+**Short description:** Codebase intelligence, repository analysis, safety controls, and MCP tools for developers and engineering teams.
+
+---
+
+## Why AgentDoctor?
+
+Modern AI coding agents can:
+
+- read individual files
+- generate and edit code
+- run tests when asked
+
+Repository-level context is usually fragmented across:
+
+| Signal             | Typical location               |
+| ------------------ | ------------------------------ |
+| Source structure   | AST / imports / modules        |
+| Dependencies       | manifests / lockfiles          |
+| History            | Git                            |
+| Architecture       | docs / conventions / inference |
+| Tests              | test trees / naming heuristics |
+| Policy             | CI rules / allowlists          |
+| Decisions          | ADRs / RFCs / tribal knowledge |
+| Secrets / exposure | config files / ignore rules    |
+
+AgentDoctor brings those signals into one local toolchain around an AI-driven engineering change:
+
+```text
+Developer / AI Agent
+        │
+        ▼
+   AgentDoctor
+        │
+┌───────────────────────────────┐
+│ Repository Intelligence       │
+│ AST / Graph / Git / Impact    │
+├───────────────────────────────┤
+│ Engineering Knowledge         │
+│ Brain / Decisions / Provenance│
+├───────────────────────────────┤
+│ Safety & Policy               │
+│ Scan / Fix / Enforce / Secrets│
+├───────────────────────────────┤
+│ Verification                  │
+│ Tests / Reports / Evidence    │
+└───────────────────────────────┘
+        │
+        ▼
+Safer, explainable engineering decisions
+```
+
+---
+
+## Capability map
+
+Status labels: **SUPPORTED** · **PARTIAL** · **EXPERIMENTAL** · **NOT YET SUPPORTED**
+
+Details and evidence: [docs/2.0/overview/capabilities.md](docs/2.0/overview/capabilities.md) · [readiness matrix](docs/2.0/overview/readiness-matrix.md)
+
+### Repository intelligence
+
+| Capability                                           | Status       |
+| ---------------------------------------------------- | ------------ |
+| TypeScript / JavaScript AST graph (+ regex fallback) | PARTIAL      |
+| Import / inferred call relationships                 | PARTIAL      |
+| Git hotspot / engineering intelligence               | PARTIAL      |
+| Change / test / refactor impact                      | PARTIAL      |
+| C4-style architecture views                          | EXPERIMENTAL |
+
+### Engineering knowledge
+
+| Capability                                                    | Status    |
+| ------------------------------------------------------------- | --------- |
+| Project Brain store + evidence-backed claims                  | SUPPORTED |
+| Repository Brain init / proposal review (never auto-approved) | PARTIAL   |
+| Governed knowledge + abstention on retrieve                   | PARTIAL   |
+| Provenance envelopes on Brain MCP tools                       | SUPPORTED |
+
+### Agent interfaces
+
+| Capability                                                                        | Status    |
+| --------------------------------------------------------------------------------- | --------- |
+| Brain MCP (`brain_*` tools, STDIO)                                                | SUPPORTED |
+| Combined MCP (Brain + intelligence tools)                                         | PARTIAL   |
+| Agent adapters (Cursor, Claude Code, Codex, Copilot, Windsurf, Gemini CLI, Aider) | SUPPORTED |
+| Local dashboard + `/api/v2/*`                                                     | PARTIAL   |
+| Programmatic API (`scan`, Fix, Brain helpers)                                     | SUPPORTED |
+
+### Safety & governance
+
+| Capability                                               | Status                |
+| -------------------------------------------------------- | --------------------- |
+| Scan → Safe Fix → Verify                                 | SUPPORTED             |
+| Policy gates (`--min-score`, severity, rule, verify-new) | SUPPORTED             |
+| Evaluate-only policy / controlled enforcement runner     | PARTIAL               |
+| Secret scan (redacted findings) + export redaction       | PARTIAL               |
+| Path-safety for MCP / dashboard                          | PARTIAL               |
+| Local-dev team auth (scrypt)                             | PARTIAL — **not SSO** |
+
+### Verification
+
+| Capability                                              | Status                     |
+| ------------------------------------------------------- | -------------------------- |
+| Unit / integration / MCP STDIO tests (`npm run verify`) | SUPPORTED                  |
+| Packed CLI clean-install smoke                          | SUPPORTED                  |
+| Reproducible AST perf harness                           | PARTIAL (synthetic sample) |
+
+---
+
+## How AgentDoctor is different
+
+Most engineering tools optimize one layer: static analysis, search, docs generation, dashboards, security scanners, or AI chat.
+
+AgentDoctor is designed around the **lifecycle of an AI-driven change**:
+
+```text
+Repository
+    → Understand
+    → Impact
+    → Knowledge
+    → Policy
+    → Change
+    → Verification
+    → Evidence
+```
+
+That combination is the product direction. It does not mean every layer is equally mature — see the capability map and limitations.
+
+---
+
+## Architecture
+
+```text
+AgentDoctor
+│
+├── Repository Intelligence
+│   ├── AST (TS/JS)
+│   ├── Graph
+│   ├── Git
+│   └── Impact
+│
+├── Engineering Knowledge
+│   ├── Brain
+│   ├── Governance
+│   └── Provenance
+│
+├── Safety
+│   ├── Scanner
+│   ├── Safe Fix
+│   ├── Secrets
+│   └── Policies
+│
+├── Agent Interface
+│   ├── MCP (brain-mcp / mcp)
+│   ├── CLI
+│   ├── API / dashboard
+│   └── Adapters
+│
+└── Verification
+    ├── Tests
+    ├── Reports
+    └── Release validation
+```
+
+Code layout: `src/{intelligence,knowledge,core,mcp,platform,enforcement,cli}/`
+
+Canonical docs: [docs/2.0/overview/architecture.md](docs/2.0/overview/architecture.md)
+
+---
+
+## Engineering principles
+
+1. Evidence over assumptions
+2. Explicit limitations over inflated claims
+3. Safety before automation
+4. Repository context over isolated files
+5. Human approval for governed decisions
+6. Backwards compatibility where documented
+7. Reproducible verification
+8. Explainable agent actions
+9. Least privilege
+10. Secure defaults
 
 ---
 
 ## Install
 
+Requires **Node.js 20+**.
+
 ```bash
 npm install -g @praneeth_54/agentdoctor
 # or
-npx @praneeth_54/agentdoctor --help
+npx @praneeth_54/agentdoctor@2.0.0 --help
 ```
 
-Requires **Node.js 20+**. The runtime depends on the TypeScript compiler API for AST analysis.
+From source:
+
+```bash
+git clone https://github.com/pranee54/AgentDoctor.git
+cd AgentDoctor
+npm install
+npm run verify
+```
 
 ---
 
-## Quick start
+## Quickstart
 
 ```bash
-# Safety loop
-agentdoctor scan
+agentdoctor --version          # 2.0.0
+agentdoctor scan .
+agentdoctor scan . --json
 agentdoctor fix --dry-run
 agentdoctor verify --baseline agentdoctor-report.json
 
-# Repository Brain proposals (never auto-approved)
+# Repository Brain proposals (not auto-approved)
 agentdoctor init --name "My App" --domain "payments"
 agentdoctor brain proposals
-agentdoctor brain review --artifact <id> --decision approved
 
 # Intelligence
 agentdoctor graph --mode auto --json
-agentdoctor health --json
-agentdoctor c4 --json
 agentdoctor impact --json
-agentdoctor refactor-impact --symbol MySymbol --json
+agentdoctor c4 --json
 
-# Knowledge (draft → human approve)
-agentdoctor knowledge-create --title "Standard" --content "…"
-agentdoctor knowledge-approve --id <id> --decision approved
-
-# Policy (evaluate-only by default)
-agentdoctor enforce --command "npm test" --json
-
-# MCP (Brain tools preserved; combined server adds intelligence tools)
+# MCP (absolute --root required)
 agentdoctor brain-mcp --root /ABS/PATH/TO/REPO
 agentdoctor mcp --root /ABS/PATH/TO/REPO
-
-# Local dashboard (loopback)
-agentdoctor dashboard
 ```
+
+CLI reference: [docs/2.0/guides/cli.md](docs/2.0/guides/cli.md)
 
 ---
 
-## Capability status (honest)
+## MCP
 
-Classifications match [docs/2.0/overview/readiness-matrix.md](docs/2.0/overview/readiness-matrix.md). **No blanket 5/5 claims.**
+AgentDoctor exposes local **STDIO** MCP servers (no API key).
 
-### Fully verified (shipped & regression-tested core)
+| Server       | Command                              | Tools                                                                                                                                                               |
+| ------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Brain MCP    | `agentdoctor brain-mcp --root <abs>` | `brain_overview`, `brain_query`, `brain_explain`, `brain_trace`, `brain_claims`, `brain_evidence`, `brain_ownership`, `brain_risk`, `brain_delta`, `brain_snapshot` |
+| Combined MCP | `agentdoctor mcp --root <abs>`       | All `brain_*` tools **plus** intelligence tools below                                                                                                               |
 
-| Capability                                                                        | Notes                                                      |
-| --------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Safety scan / Safe Fix / verify / policy gates                                    | Exit codes and CI Action preserved                         |
-| Agent adapters (Cursor, Claude Code, Codex, Copilot, Windsurf, Gemini CLI, Aider) | Detect + rules; Safe Fix where official ignore/deny exists |
-| Project Brain store + Brain MCP tool names (`brain_*`)                            | STDIO MCP; `--root` required                               |
+Intelligence tools (combined MCP):
+`repo_overview`, `codebase_search`, `symbol_lookup`, `dependency_lookup`, `call_graph_lookup`, `test_impact`, `refactor_impact`, `code_health`, `architecture_info`, `knowledge_retrieve`, `policy_evaluate`
 
-### Partially validated (implemented, tested; accuracy/perf not independently certified)
-
-| Capability                                      | Entry points                                |
-| ----------------------------------------------- | ------------------------------------------- |
-| Repository Brain init / proposal review         | `init`, `brain review`, `brain proposals`   |
-| TS/JS AST intelligence graph (+ regex fallback) | `graph`                                     |
-| Git hotspots / bus-factor style metrics         | `health` (method disclosed per metric)      |
-| Impact / test-impact / refactor-impact          | `impact`, `test-impact`, `refactor-impact`  |
-| Knowledge governance + abstention               | `knowledge*`; MCP `knowledge_retrieve`      |
-| Policy packs + controlled enforcement runner    | `enforce`, `platform policy-check`          |
-| Combined MCP (`agentdoctor mcp`)                | Brain + intelligence tools                  |
-| Dashboard + `/api/v2/*`                         | `dashboard` (loopback default)              |
-| Local-dev team auth (scrypt)                    | `team-register`, `team-login` — **not SSO** |
-
-### Experimental
-
-| Capability     | Notes                                                                             |
-| -------------- | --------------------------------------------------------------------------------- |
-| C4-style views | `c4` — **inferred/proposed** from graph evidence, not approved architecture truth |
-
-### Unsupported / not claimed
-
-| Topic                                            | Status                                             |
-| ------------------------------------------------ | -------------------------------------------------- |
-| Enterprise SSO / IdP                             | Not bundled                                        |
-| Production SQLite / Postgres / vector search     | Flags off / stub only                              |
-| Full multi-language AST (Python, Go, …)          | Unsupported                                        |
-| Direct IDE interception / agent process blocking | Unsupported                                        |
-| Coverage-backed test selection as ground truth   | Not bundled (test-impact is heuristic/graph-based) |
+Guide: [docs/2.0/guides/mcp.md](docs/2.0/guides/mcp.md) · Deep Brain MCP: [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md)
 
 ---
 
-## Safety (preserved)
+## GitHub Action
 
-Scan agent configs and repository hygiene; apply Safe Fix where supported; verify against a baseline; fail CI on severity/score gates.
-
-```bash
-agentdoctor scan --json
-agentdoctor fix -y
-agentdoctor verify --baseline agentdoctor-report.json
-```
-
-GitHub Action: pin `pranee54/AgentDoctor@v2.0.0` (default npm version input is `2.0.0`). Surfaces matrix: [docs/reference/surfaces-and-adapters.md](docs/reference/surfaces-and-adapters.md).
+Use AgentDoctor Safety in CI for scan / verify gates. Default npm version input is **`2.0.0`**.
 
 ```yaml
 - uses: pranee54/AgentDoctor@v2.0.0
   with:
     path: .
     version: "2.0.0"
+    fail-on-severity: critical
 ```
 
----
+For repository CI against the checked-out build: `version: workspace` (requires `dist/` from `npm run build`).
 
-## Repository Brain
+Guide: [docs/2.0/guides/github-action.md](docs/2.0/guides/github-action.md) · Action metadata: [`action.yml`](action.yml)
 
-`agentdoctor init` writes **PROPOSED** artifacts under `.agentdoctor/repository-brain/proposals/`. They are **not** facts until a human reviews them.
-
-```bash
-agentdoctor brain init
-agentdoctor brain snapshot
-agentdoctor brain review --artifact prop_… --decision approved|rejected
-```
-
-Guide: [docs/2.0/guides/repository-brain.md](docs/2.0/guides/repository-brain.md).
+Marketplace listing: confirm in the GitHub UI if you need Marketplace discovery beyond the Action in this repository.
 
 ---
 
-## Codebase intelligence
+## Security model
 
-- **AST graph** — TypeScript/JavaScript via the TypeScript compiler API; regex fallback when needed (`graph --mode auto|typescript-ast|regex`).
-- **Git intelligence** — recent-window hotspots / co-change heuristics with method disclosure (`health`).
-- **C4 views** — inferred diagrams (`c4`); label them proposed/inferred.
-- **Impact** — change/test/refactor blast-radius helpers (`impact`, `refactor-impact`).
+| Control     | Behavior                                                                |
+| ----------- | ----------------------------------------------------------------------- |
+| Path safety | MCP / dashboard reject traversal, encoded escapes, hostile URLs         |
+| Safe Fix    | Preflight targets; refuse symlink write-through / non-allowlisted paths |
+| Secrets     | Opt-in scan; findings and exports redact sensitive patterns             |
+| Policy      | Evaluate-only by default (`executionResult: "not-executed"`)            |
+| Enforcement | Controlled runner blocks; does **not** claim IDE interception           |
+| Dashboard   | Loopback by default; non-loopback requires explicit opt-in              |
+| Team auth   | Local-dev scrypt only — **not** enterprise SSO                          |
 
-Limitations: call resolution is best-effort; non-TS languages are not deeply analyzed.
-
----
-
-## Knowledge governance
-
-Draft → pending-review → approved/rejected. Retrieval **abstains** when no approved record matches.
-
-Guide: [docs/2.0/guides/knowledge-governance.md](docs/2.0/guides/knowledge-governance.md).
+Threat model: [docs/2.0/overview/security-threat-model.md](docs/2.0/overview/security-threat-model.md) · Trust boundaries: [docs/2.0/overview/trust-boundaries.md](docs/2.0/overview/trust-boundaries.md)
 
 ---
 
-## Policy evaluation and controlled enforcement
+## What AgentDoctor does not do
 
-| Mode                                                               | Behavior                                                                                  |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| Policy evaluation (`platform policy-check`, MCP `policy_evaluate`) | Verdict only; `executionResult: "not-executed"`                                           |
-| Controlled runner (`enforce`)                                      | Can report `blocked-by-enforcement` when **AgentDoctor** refuses to run a blocked command |
-| Third-party IDEs                                                   | **Not** intercepted                                                                       |
+- Enterprise SSO / IdP
+- Complete multi-language AST (beyond TS/JS depth)
+- Coverage-file-backed test selection as ground truth
+- IDE / agent process interception
+- Production multi-tenant cloud / managed hosting in this package
+- Guaranteed autonomous command execution of “allowed” policies
+- Treating inferred C4 / heuristic impact as approved architecture truth
+- Shipping full `docs/2.0/` inside the npm tarball (Option B: README + GitHub docs)
 
-Trust boundaries: [docs/2.0/overview/trust-boundaries.md](docs/2.0/overview/trust-boundaries.md).
-
----
-
-## MCP
-
-| Command                               | Server     | Tools                      |
-| ------------------------------------- | ---------- | -------------------------- |
-| `agentdoctor brain-mcp --root <path>` | Brain only | Stable `brain_*` names     |
-| `agentdoctor mcp --root <path>`       | Combined   | Brain + intelligence tools |
-
-MCP docs: [docs/2.0/guides/mcp.md](docs/2.0/guides/mcp.md) · legacy detail: [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md).
+Full list: [docs/2.0/overview/known-limitations.md](docs/2.0/overview/known-limitations.md)
 
 ---
 
-## CLI / API / dashboard
+## Roadmap / design direction: Change Proof
 
-- CLI index: [docs/2.0/guides/cli.md](docs/2.0/guides/cli.md)
-- HTTP API (local dashboard): [docs/2.0/guides/api.md](docs/2.0/guides/api.md)
-- Dashboard defaults to `127.0.0.1`; `?user=` role selection is **not** authentication
+**PLANNED** — not a shipped runtime product.
 
-```bash
-agentdoctor dashboard
-agentdoctor doctor --json
-```
+A future “Change Proof” record could attach evidence to an AI-driven change: request, files/symbols, callers, tests, policies, ADRs, verification, and security results. Treat this as **design direction**, not a current CLI feature.
 
----
-
-## Local-development team authentication
-
-```bash
-agentdoctor team-register --username alice --password '………'
-agentdoctor team-login --username alice --password '………'
-```
-
-This is **local-dev scrypt auth**, clearly labeled — **not** enterprise SSO.
-
----
-
-## Important limitations (read before adopting)
-
-1. AST depth is **TypeScript/JavaScript**-oriented.
-2. Test-impact is **heuristic / graph-based**, not coverage-oracle accurate.
-3. C4 views are **inferred**, not approved architecture.
-4. Firewall is **evaluate-only** unless you use AgentDoctor’s controlled runner.
-5. Team auth is **local-dev**, not SSO.
-6. No IDE interception.
-7. No production SQLite/Postgres/vector backend in this package.
-8. No complete multi-language AST.
-9. Deep 2.0 audits and readiness reports live on GitHub under [docs/2.0/](docs/2.0/README.md) (not inside the npm tarball — packaging Option B).
-
-Full list: [docs/2.0/overview/known-limitations.md](docs/2.0/overview/known-limitations.md).
-
----
-
-## Compatibility
-
-- Safety CLI exit codes and Brain MCP tool names are preserved.
-- Additive 2.0 commands do not remove 1.x workflows.
-- Migration notes: [docs/2.0/guides/migration.md](docs/2.0/guides/migration.md).
+See [ROADMAP.md](ROADMAP.md).
 
 ---
 
 ## Documentation map
 
-| Area             | Link                                                                       |
-| ---------------- | -------------------------------------------------------------------------- |
-| 2.0 index        | [docs/2.0/README.md](docs/2.0/README.md)                                   |
-| CLI / MCP / API  | [docs/2.0/guides/](docs/2.0/guides/)                                       |
-| Release blockers | [docs/2.0/audits/release-blockers.md](docs/2.0/audits/release-blockers.md) |
-| Docs hub         | [docs/README.md](docs/README.md)                                           |
-| Changelog        | [CHANGELOG.md](CHANGELOG.md)                                               |
-| Contributing     | [CONTRIBUTING.md](CONTRIBUTING.md)                                         |
+| Audience                               | Start here                                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Product / 2.0                          | [docs/2.0/README.md](docs/2.0/README.md)                                                                |
+| Capabilities / readiness               | [capabilities](docs/2.0/overview/capabilities.md) · [readiness](docs/2.0/overview/readiness-matrix.md)  |
+| Guides                                 | [docs/2.0/guides/](docs/2.0/guides/)                                                                    |
+| Reference (rules, scoring, exit codes) | [docs/reference/](docs/reference/)                                                                      |
+| Contributing                           | [CONTRIBUTING.md](CONTRIBUTING.md) · [docs/development/development.md](docs/development/development.md) |
+| Changelog                              | [CHANGELOG.md](CHANGELOG.md)                                                                            |
+| Release evidence                       | [docs/2.0/release/final-release-report.md](docs/2.0/release/final-release-report.md)                    |
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/development/development.md](docs/development/development.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md). Prefer evidence-backed PRs, honest status labels, and no inflated capability claims.
 
 ---
 

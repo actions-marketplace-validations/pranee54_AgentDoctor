@@ -145,7 +145,7 @@ export function createProgram(): Command {
     program
       .name("agentdoctor")
       .description(
-        "Audit AI coding agent configuration in a repository (local, deterministic, no API key).",
+        "Engineering intelligence and safety for AI coding agents — scan, knowledge, MCP, and verification (local, deterministic; no API key required for core flows).",
       )
       .version(PACKAGE_VERSION, "-V, --version", "Print AgentDoctor version")
       .argument("[path]", "Repository path to scan (default: current directory)"),

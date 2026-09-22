@@ -88,17 +88,33 @@ npm pkg fix   # addresses “bin[agentdoctor] script name was cleaned” publish
 
 Unchanged honesty: TS/JS AST focus, heuristic test-impact, inferred C4, evaluate-only firewall, local-dev auth (not SSO), no IDE interception, no production DB backends. See README + `docs/2.0/overview/known-limitations.md`.
 
+## Presentation pass (post-publish)
+
+Professional open-source positioning redesign (README + docs/2.0 + CONTRIBUTING / ROADMAP). No new product features; Change Proof remains **PLANNED**.
+
+| Item                                                  | Status                                                                                               |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| README hero / lifecycle / capability map              | VERIFIED (in tree)                                                                                   |
+| docs/2.0 capabilities + readiness for published 2.0.0 | VERIFIED                                                                                             |
+| GitHub Action guide                                   | VERIFIED                                                                                             |
+| CLI description alignment                             | VERIFIED (source; requires rebuild for dist)                                                         |
+| npm tarball README refresh                            | **PARTIAL** — published `2.0.0` tarball retains pre-presentation README until a future patch publish |
+| Marketplace                                           | **MANUAL ACTION REQUIRED**                                                                           |
+
 ## Remaining manual actions
 
 1. Confirm GitHub Marketplace listing in the GitHub UI (if desired).
 2. Optional: run `npm pkg fix` and ship a tiny follow-up if you want a clean publish warning log next time.
-3. Watch CI Action smoke jobs now that `2.0.0` is on the registry.
+3. Optional: publish a patch (e.g. `2.0.1`) if the npm package README must match the presentation README without waiting for the next feature release.
+4. Watch CI Action smoke jobs now that `2.0.0` is on the registry.
 
 ## Final status
 
-| Gate                               | Status          |
-| ---------------------------------- | --------------- |
-| Repository clean (local)           | YES             |
-| GitHub commit/tag/release verified | YES             |
-| npm verified                       | **YES**         |
-| Marketplace verified               | **NO — MANUAL** |
+| Gate                               | Status                            |
+| ---------------------------------- | --------------------------------- |
+| Repository clean (local)           | YES (after presentation commit)   |
+| GitHub commit/tag/release verified | YES                               |
+| npm verified                       | **YES** (`2.0.0`)                 |
+| Presentation docs in git           | YES (this pass)                   |
+| npm README matches presentation    | **PARTIAL** (needs patch publish) |
+| Marketplace verified               | **NO — MANUAL**                   |

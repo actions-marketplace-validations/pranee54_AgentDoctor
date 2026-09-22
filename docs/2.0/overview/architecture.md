@@ -1,27 +1,57 @@
 # AgentDoctor 2.0 — Architecture
 
 **Package version:** 2.0.0
+
 **Contracts version:** `2.0.0-contracts`
-**Positioning:** Codebase intelligence for developers, AI agents, and engineering teams.
 
-## Layers (preserved + extended)
+**Positioning:** Engineering intelligence & safety for AI coding agents.
 
-| Layer                    | Role                                                                | Primary paths                                                            |
-| ------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Safety                   | Scan / fix / verify / policy / CI                                   | `src/core/scanner`, `src/core/fix`, `src/core/verify`, `src/core/policy` |
-| Project Brain + MCP      | Claims, evidence, contradictions, Brain tools                       | `src/core/understanding`, `src/mcp/brain`                                |
-| Platform 2.0             | Graph, sessions, provenance, impact, firewall (evaluate-only)       | `src/platform`                                                           |
-| Shared contracts         | Unified finding/graph/knowledge/policy shapes                       | `src/contracts`                                                          |
-| Repository Brain product | Init proposals + human review lifecycle                             | `src/core/brain-product`                                                 |
-| Intelligence             | TS AST graph (+ regex fallback), git hotspots                       | `src/intelligence`                                                       |
-| Architecture views       | C4-style inferred views                                             | `src/architecture`                                                       |
-| Knowledge governance     | Draft→approve abstention-aware store                                | `src/knowledge`                                                          |
-| Storage abstraction      | Filesystem default; memory; SQLite stubbed off                      | `src/storage`                                                            |
-| Enforcement              | Controlled runner interface (blocks only when AD controls boundary) | `src/enforcement`                                                        |
-| Team (local-dev)         | scrypt password auth + RBAC — **not SSO**                           | `src/team`                                                               |
-| Combined MCP             | Brain tool names preserved + intelligence tools                     | `src/mcp/agentdoctor`, `src/mcp/intelligence`                            |
-| Dashboard / API          | Loopback read-only + `/api/v2/*`                                    | `src/dashboard`                                                          |
-| Ops                      | Local health probe                                                  | `src/ops`                                                                |
+```text
+AgentDoctor
+│
+├── Repository Intelligence
+│   ├── AST (TS/JS)
+│   ├── Graph
+│   ├── Git
+│   └── Impact
+│
+├── Engineering Knowledge
+│   ├── Brain
+│   ├── Governance
+│   └── Provenance
+│
+├── Safety
+│   ├── Scanner
+│   ├── Safe Fix
+│   ├── Secrets
+│   └── Policies
+│
+├── Agent Interface
+│   ├── MCP (brain-mcp / mcp)
+│   ├── CLI
+│   ├── API / dashboard
+│   └── Adapters
+│
+└── Verification
+    ├── Tests
+    ├── Reports
+    └── Release validation
+```
+
+## Layer responsibilities
+
+| Layer                   | Role                                                | Primary paths                                                            |
+| ----------------------- | --------------------------------------------------- | ------------------------------------------------------------------------ |
+| Repository intelligence | Structure, history, blast radius                    | `src/intelligence`, `src/architecture`                                   |
+| Engineering knowledge   | Claims, proposals, approved knowledge               | `src/core/understanding`, `src/core/brain-product`, `src/knowledge`      |
+| Safety                  | Scan / fix / verify / policy / CI                   | `src/core/scanner`, `src/core/fix`, `src/core/verify`, `src/core/policy` |
+| Platform 2.0            | Sessions, provenance, evaluate-only firewall        | `src/platform`                                                           |
+| Shared contracts        | Unified finding / graph / knowledge / policy shapes | `src/contracts`                                                          |
+| Enforcement             | Controlled runner (blocks under AD control)         | `src/enforcement`                                                        |
+| Team (local-dev)        | scrypt password auth + RBAC — **not SSO**           | `src/team`                                                               |
+| Agent interface         | MCP, CLI, dashboard, adapters                       | `src/mcp`, `src/cli`, `src/dashboard`, `src/agents`                      |
+| Storage                 | Filesystem default; memory; SQLite stubbed          | `src/storage`                                                            |
+| Ops                     | Local health probe                                  | `src/ops`                                                                |
 
 ## Trust model (short)
 

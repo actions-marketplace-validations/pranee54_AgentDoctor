@@ -1,48 +1,35 @@
 # AgentDoctor 2.0 — Release Blockers
 
-**Context:** Post–version-cut status. Package metadata is **2.0.0**; npm publish / git tag / push are **not** done.
-**Question answered:** What still blocks calling a **published** npm **2.0.0** release complete?
+**Status:** **HISTORICAL** — blockers below were cleared by the published **2.0.0** release.
 
-## Verdict
+**Verified:** see [final-release-report.md](../release/final-release-report.md)
 
-| Decision                                         | Answer                                                                   |
-| ------------------------------------------------ | ------------------------------------------------------------------------ |
-| Begin formal 2.0.0 release process?              | **YES** (version cut done 2026-09-21)                                    |
-| Publish npm `2.0.0` immediately?                 | **NO**                                                                   |
-| Critical code/security showstopper found?        | **NO** (within audited scope)                                            |
-| Version cut (`package.json` / CHANGELOG / pack)? | **DONE** — see [version-cut-report.md](../release/version-cut-report.md) |
+**Package:** `@praneeth_54/agentdoctor@2.0.0` on npm (`latest`)
 
----
+**Tag:** `v2.0.0`
 
-## Release blockers (must clear before publishing 2.0.0)
+**Action pin:** `2.0.0`
 
-1. **Git commit of the version cut** — not performed (explicitly out of cut scope).
-2. **Git tag `v2.0.0`** — not created.
-3. **Push to remote** — not performed.
-4. **`npm publish`** — not performed.
-5. **Action / CI pins** still reference published `1.1.1` until post-publish update.
-6. **Human review of release commit scope** — large working tree; confirm what ships with the tag.
-7. **Honest marketing at publish** — retain partially validated / experimental / unsupported labels (README + readiness matrix).
+Remaining open items (not release blockers for 2.0.0):
 
-~~Version still `1.1.1`~~ — cleared by version cut.
-~~CHANGELOG not cut~~ — cleared (`[2.0.0] — 2026-09-21`).
-~~`package.json` description~~ — cleared (authorized string applied).
-**Limitations in npm pack** — Option B retained (README complete; `docs/2.0/` on GitHub only).
-
-Docs home: [`docs/2.0/`](../README.md).
+| Item                            | Status                                 |
+| ------------------------------- | -------------------------------------- |
+| GitHub Marketplace listing      | MANUAL ACTION REQUIRED                 |
+| npm README presentation refresh | PARTIAL — needs optional patch publish |
+| Change Proof runtime            | PLANNED                                |
 
 ---
 
-## Exit criteria checklist for formal 2.0.0 cut
+## Cleared blockers (archive)
 
-- [x] Human authorizes version bump to `2.0.0`
-- [x] README + package description updated and reviewed (README preserved; description applied)
-- [x] Limitations disclosed in packed artifact (README section; Option B)
-- [x] CHANGELOG `[2.0.0]` section complete
-- [x] `npm run verify` green on version-cut tree
-- [x] `npm pack` produced `praneeth_54-agentdoctor-2.0.0.tgz`
-- [ ] Human commit + tag + publish (separate authorization)
-- [ ] Readiness matrix attached / linked; no false 5/5 claims
-- [ ] Tag + publish only after checklist complete
+The following were blocking **before** publish; retained for audit trail:
 
-Until then, keep shipping as **1.1.1** with Unreleased 2.0 capabilities in-tree.
+1. ~~Git commit of the version cut~~ — DONE (`c8b6681`)
+2. ~~Git tag `v2.0.0`~~ — DONE
+3. ~~Push to remote~~ — DONE
+4. ~~`npm publish`~~ — DONE
+5. ~~Action / CI pins at `1.1.1`~~ — DONE (`2.0.0`)
+6. ~~Human review of release commit scope~~ — DONE (scope reviews in `docs/2.0/release/`)
+7. Honest marketing labels — retained in README + readiness matrix (ongoing)
+
+Version cut / CHANGELOG / package description — cleared at cut. Packaging Option B retained (deep `docs/2.0/` on GitHub only).
