@@ -2,7 +2,7 @@
 
 Canonical home for AgentDoctor **2.0** architecture, guides, audits, and release evidence.
 
-**Package (current):** [`@praneeth_54/agentdoctor@2.0.1`](https://www.npmjs.com/package/@praneeth_54/agentdoctor). Historical 2.0.0 release report: [release/final-release-report.md](release/final-release-report.md). For 2.0.1 cut docs see [../2.0.1/](../2.0.1/).
+**Package (current):** [`@praneeth_54/agentdoctor@2.1.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor). Historical 2.0.0 release report: [release/final-release-report.md](release/final-release-report.md). For 2.0.1 cut docs see [../2.0.1/](../2.0.1/).
 
 **Positioning:** Engineering intelligence & safety for AI coding agents.
 
@@ -78,4 +78,4 @@ Product landing: [../../README.md](../../README.md)
 | [../mcp/brain-mcp.md](../mcp/brain-mcp.md) | Brain MCP protocol detail                 |
 | [../archive/](../archive/)                 | Historical plans (not current claims)     |
 
-Prefer **this tree** + [../2.0.1/](../2.0.1/) + the repository README for public claims about the current cut (2.0.1).
+Prefer **this tree** + [../2.0.1/](../2.0.1/) + the repository README for public claims about the assurance substrate; current package cut is **2.1.0**.

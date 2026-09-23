@@ -152,3 +152,115 @@ export type {
   PolicyInput,
 } from "./core/policy/evaluate.js";
 export type { FixPlan, FixAction, FixApplyResult } from "./core/fix/types.js";
+
+/** AgentDoctor 2.1 AI provider layer (optional — core works without AI). */
+export {
+  createModelProvider,
+  loadAiConfig,
+  publicAiConfig,
+  redactForModel,
+  AI_PROVIDER_REQUIRED_MESSAGE,
+  NoneModelProvider,
+  MockModelProvider,
+  OpenAiCompatibleProvider,
+} from "./ai/index.js";
+export type {
+  AiConfig,
+  AiProviderId,
+  ChatMessage,
+  ChatRequest,
+  ChatResponse,
+  ModelMetadata,
+  ModelProvider,
+  ToolSpec,
+  ToolCallRequest,
+  TokenUsage,
+} from "./ai/index.js";
+
+/** AgentDoctor 2.1 Project AI Agent core (M1 scaffolding). */
+export {
+  AgentState,
+  AgentStateMachine,
+  AgentRuntime,
+  DEFAULT_AGENT_LIMITS,
+  retrieveProjectContext,
+  truthLabelHelp,
+  minTruth,
+} from "./agent/index.js";
+export type {
+  AgentLimits,
+  AgentAuditEvent,
+  AgentRuntimeOptions,
+  AgentTurnResult,
+  AgentStateTransition,
+  ContextBundle,
+  ContextCitation,
+  EvidenceType,
+  TruthLabel,
+  RetrieveContextOptions,
+} from "./agent/index.js";
+
+export {
+  ChatService,
+  createChatService,
+  ChatMemory,
+  CHAT_PROVIDER_NONE_MESSAGE,
+  buildChatTurnResponse,
+  formatChatResponseForCli,
+  summarizeProjectForChat,
+} from "./agent/chat/index.js";
+export type {
+  ChatTurnResponse,
+  ChatServiceOptions,
+  TruthClaim,
+  ProjectChatSummary,
+} from "./agent/chat/index.js";
+
+/** AgentDoctor 2.1 agent tools + plan (M3). */
+export {
+  listAgentToolSpecs,
+  getToolSpec,
+  riskForTool,
+  executeAgentTool,
+  isReadTool,
+  newToolCall,
+  evaluateApproval,
+  formatApprovalPrompt,
+  buildAgentPlan,
+  formatAgentPlan,
+  approvePlan,
+  runCodingLoop,
+  verifyAgentWork,
+  formatVerificationReport,
+} from "./agent/index.js";
+export type {
+  AgentToolName,
+  AgentToolSpec,
+  AgentToolCall,
+  AgentToolResult,
+  AgentRiskLevel,
+  ApprovalRequest,
+  ApprovalResult,
+  ApprovalDecision,
+  AgentPlan,
+  AgentPlanStep,
+  CodingLoopOptions,
+  CodingLoopResult,
+  AgentVerificationReport,
+  VerificationCheck,
+} from "./agent/index.js";
+
+export {
+  getModeProfile,
+  defaultStudentMode,
+  parseAgentMode,
+  modeAllowsMutation,
+  modeBlocksToolCategory,
+  StudentService,
+} from "./agent/index.js";
+export type {
+  AgentMode,
+  ModeProfile,
+  StudentDocSection,
+  BuildWithMeResult,
+} from "./agent/index.js";

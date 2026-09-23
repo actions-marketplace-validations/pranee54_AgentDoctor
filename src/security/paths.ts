@@ -55,17 +55,6 @@ export function rejectHostilePathInput(candidate: string): void {
   }
 }
 
-function realpathOrSelf(target: string): string {
-  try {
-    if (fs.existsSync(target)) {
-      return fs.realpathSync(target);
-    }
-  } catch {
-    // fall through
-  }
-  return target;
-}
-
 function realpathRoot(root: string): string {
   try {
     return fs.realpathSync(root);
@@ -95,14 +84,51 @@ export function resolveSafeRepoPath(rootInput: string, candidate: string): strin
   }
 
   const realRoot = realpathRoot(root);
-  const realTarget = realpathOrSelf(absolute);
 
-  // Symlink / realpath escape check (both sides realpath'd when possible).
-  if (!isPathInsideRoot(realRoot, realTarget) && realTarget !== realRoot) {
-    throw new PathEscapeError("path escapes repository root");
+  // Existing path: realpath and verify (catches symlink escape).
+  if (fs.existsSync(absolute)) {
+    let realTarget: string;
+    try {
+      realTarget = fs.realpathSync(absolute);
+    } catch {
+      realTarget = absolute;
+    }
+    if (!isPathInsideRoot(realRoot, realTarget) && realTarget !== realRoot) {
+      throw new PathEscapeError("path escapes repository root");
+    }
+    return realTarget;
   }
 
-  return realTarget;
+  // Non-existent path (create): reject if any existing ancestor realpath escapes
+  // (symlink-dir escape), then map under realRoot for /var vs /private/var.
+  let ancestor = path.dirname(absolute);
+  for (;;) {
+    if (fs.existsSync(ancestor)) {
+      let realAncestor: string;
+      try {
+        realAncestor = fs.realpathSync(ancestor);
+      } catch {
+        realAncestor = ancestor;
+      }
+      if (!isPathInsideRoot(realRoot, realAncestor) && realAncestor !== realRoot) {
+        throw new PathEscapeError("path escapes repository root");
+      }
+      break;
+    }
+    const parent = path.dirname(ancestor);
+    if (parent === ancestor) break;
+    ancestor = parent;
+  }
+
+  const rel = path.relative(root, absolute);
+  if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) {
+    throw new PathEscapeError("path escapes repository root");
+  }
+  const mapped = path.resolve(realRoot, rel);
+  if (!isPathInsideRoot(realRoot, mapped) && mapped !== realRoot) {
+    throw new PathEscapeError("path escapes repository root");
+  }
+  return mapped;
 }
 
 /** Assert `candidate` resolves inside `root`; throws PathEscapeError otherwise. */

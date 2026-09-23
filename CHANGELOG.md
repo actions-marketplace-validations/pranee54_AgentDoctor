@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-09-23
+
+Optional Project AI Agent line on top of 2.0.1 assurance. AI remains **opt-in**.
+Canonical release notes: [docs/RELEASE_2_1_0.md](docs/RELEASE_2_1_0.md).
+Checklist: [docs/RELEASE_CHECKLIST_2_1_0.md](docs/RELEASE_CHECKLIST_2_1_0.md).
+
+#### Project Intelligence
+
+- Project-aware context retrieval (Brain / graph / planContext orchestration).
+- Project Chat CLI (`agentdoctor chat` / `ask`) with evidence-backed answers.
+- Truth labels: `VERIFIED` | `INFERRED` | `UNKNOWN` | `EXTERNAL`.
+
+#### AI Agent
+
+- Provider abstraction (`ModelProvider`): `none` | `mock` | `openai-compatible` | `ollama`.
+- Optional AI architecture: model reasons; AgentDoctor provides context, controls tools, verifies results.
+- Native Anthropic / Gemini SDKs remain **NOT IMPLEMENTED** (fail closed via `none`).
+
+#### Agent Tools
+
+- Read / search tools (path-safe).
+- Create / edit / delete with diffs (approval required).
+- Controlled command and test execution via `runControlledCommand` (`shell=false`).
+- Coding loop: PLAN → APPROVAL → TOOLS → OBSERVE → VERIFY.
+
+#### Safety
+
+- Path safety and symlink-dir escape rejection on writes.
+- Workspace isolation when `WorkspaceModel` is provided; otherwise repo-root binding.
+- Mode `allowWrites` enforcement (LEARN hard-blocks writes).
+- Approval gates (`--approve` / `approvedByHuman`); model cannot self-approve.
+- Dangerous command blocking; prompt-injection data separation (`PROJECT_DATA` / `TOOL_OUTPUT_UNTRUSTED`).
+- Secret redaction (reuses existing redaction infrastructure).
+- Hard agent limits: tool calls, iterations, wall time, files modified, context chars.
+
+#### Verification
+
+- Post-change analysis / evidence / proof / architecture (where applicable).
+- Optional controlled test run (`--run-tests`).
+- Always preserves `ENGINEERING_CORRECTNESS_NOT_CLAIMED`.
+
+#### Student
+
+- `agentdoctor learn` — project explain, viva, docs.
+- Default student experience: **BUILD_WITH_ME** (explain → plan → teach → approve → `runCodingLoop` → verify).
+- Rich interactive student UI remains **PARTIAL**.
+
+#### MCP
+
+- Agent tools: `project_context`, `project_ask`, `code_search`, `file_read`, `file_create`, `file_edit`, `agent_plan`, `change_verify`.
+- No unrestricted shell.
+- `project_ask` fail-closed when provider is `none`.
+- MCP `approved=true` is **trusted-caller input**, not cryptographic human identity; MCP does not carry `AgentMode`.
+
+#### Dashboard
+
+- Project Chat via `POST /api/chat` (ask-only; no file writes).
+- Fail-closed when AI provider resolves to `none` (no silent mock fallback).
+
+#### Known limitations
+
+- Not an OS sandbox / EDR (**EXTERNAL LIMITATION**).
+- Native Anthropic / Gemini SDKs **NOT IMPLEMENTED**.
+- Correctness is never guaranteed.
+- MCP approval is trusted-caller input (not cryptographic human identity); MCP does not carry AgentMode.
+- Rich interactive student UI remains **PARTIAL**.
+
 ## [2.0.1] — 2026-09-23
 
 Hardening and change-assurance cut on top of 2.0.0, plus a deepening pass that
@@ -453,7 +520,8 @@ First public beta.
 - Not a complete secret scanner
 - Git “tracked secret” detection deferred
 
-[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/pranee54/AgentDoctor/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/pranee54/AgentDoctor/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/pranee54/AgentDoctor/compare/v1.1.1...v2.0.0
 [1.1.1]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.1

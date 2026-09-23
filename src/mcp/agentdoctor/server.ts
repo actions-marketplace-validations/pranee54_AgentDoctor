@@ -15,6 +15,7 @@ import {
   invokeIntelligenceMcpTool,
   listIntelligenceMcpTools,
 } from "../intelligence/registry.js";
+import { AGENT_MCP_TOOL_NAMES, invokeAgentMcpTool, listAgentMcpTools } from "../agent/registry.js";
 
 export interface StartAgentDoctorMcpOptions {
   root: string;
@@ -37,6 +38,7 @@ export async function startAgentDoctorMcpServer(
 
   const brainNames = new Set<string>(BRAIN_MCP_TOOL_NAMES);
   const intelNames = new Set<string>(INTELLIGENCE_MCP_TOOL_NAMES);
+  const agentNames = new Set<string>(AGENT_MCP_TOOL_NAMES);
 
   const server = new Server(
     {
@@ -51,7 +53,7 @@ export async function startAgentDoctorMcpServer(
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [...listBrainMcpTools(), ...listIntelligenceMcpTools()],
+    tools: [...listBrainMcpTools(), ...listIntelligenceMcpTools(), ...listAgentMcpTools()],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -67,6 +69,10 @@ export async function startAgentDoctorMcpServer(
       isError = result.isError;
     } else if (intelNames.has(name)) {
       const result = await invokeIntelligenceMcpTool(root, name, args);
+      structured = result.structured;
+      isError = result.isError;
+    } else if (agentNames.has(name)) {
+      const result = await invokeAgentMcpTool(root, name, args);
       structured = result.structured;
       isError = result.isError;
     } else {

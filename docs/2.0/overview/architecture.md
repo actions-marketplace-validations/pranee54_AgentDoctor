@@ -1,6 +1,6 @@
 # AgentDoctor 2.0 — Architecture
 
-**Package version:** 2.0.1
+**Package version:** 2.1.0
 
 **Contracts version:** `2.0.0-contracts`
 

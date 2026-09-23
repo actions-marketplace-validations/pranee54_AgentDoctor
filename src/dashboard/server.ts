@@ -23,6 +23,10 @@ import { CONTRACTS_VERSION } from "../contracts/index.js";
 import { collectOpsHealth } from "../ops/health.js";
 import { listPolicyPacks } from "../policy/packs.js";
 import { sanitizeForOutput } from "../utils/path.js";
+import { createModelProvider, loadAiConfig } from "../ai/index.js";
+import type { ModelProvider } from "../ai/types.js";
+import { ChatService } from "../agent/chat/service.js";
+import { formatChatResponseForCli } from "../agent/chat/response.js";
 
 function safeJsonError(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error);
@@ -76,6 +80,11 @@ export interface DashboardServerOptions {
    * Query ?user= is a localDevIdentityHint only; role elevation requires AGENTDOCTOR_ALLOW_LOCAL_IDENTITY_HINT=1.
    */
   allowNonLoopback?: boolean;
+  /**
+   * Optional provider override (tests). Production uses loadAiConfig().
+   * When unset and provider resolves to none, /api/chat fails closed.
+   */
+  chatProvider?: ModelProvider;
 }
 
 export function isLoopbackHost(host: string): boolean {
@@ -125,6 +134,7 @@ function htmlPage(): string {
       <a href="#brain">Brain</a>
       <a href="#graph">Graph</a>
       <a href="#knowledge">Knowledge</a>
+      <a href="#chat">Project Chat</a>
       <a href="#meta">Audit / baselines</a>
     </nav>
     <section id="overview">
@@ -150,6 +160,21 @@ function htmlPage(): string {
     <section id="knowledge">
       <h2>Governed knowledge</h2>
       <pre id="knowledgeBody" class="muted">Loading…</pre>
+    </section>
+    <section id="chat">
+      <h2>Project Chat</h2>
+      <p class="muted">Ask about this repository. Answers use evidence + truth labels. No file writes from this panel.</p>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:1rem">
+        <div>
+          <textarea id="chatInput" rows="3" style="width:100%;background:#0d1520;color:#e8eef5;border:1px solid #243040;border-radius:8px;padding:0.6rem" placeholder="How does authentication work?"></textarea>
+          <button id="chatAsk" style="margin-top:0.5rem;background:var(--accent);color:#041018;border:0;border-radius:6px;padding:0.45rem 0.9rem;font-weight:600;cursor:pointer">Ask</button>
+          <pre id="chatBody" class="muted" style="margin-top:0.75rem">Ask a question…</pre>
+        </div>
+        <div>
+          <h3 style="margin:0 0 0.5rem;font-size:0.9rem">Evidence</h3>
+          <pre id="chatEvidence" class="muted">—</pre>
+        </div>
+      </div>
     </section>
     <section id="meta">
       <h2>Safe Fix audit / baselines / sessions</h2>
@@ -177,6 +202,28 @@ function htmlPage(): string {
     }
     load().catch(err => {
       document.getElementById('status').textContent = String(err);
+    });
+    document.getElementById('chatAsk').addEventListener('click', async () => {
+      const question = document.getElementById('chatInput').value.trim();
+      if (!question) return;
+      document.getElementById('chatBody').textContent = 'Thinking…';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question }),
+        });
+        const data = await res.json();
+        document.getElementById('chatBody').textContent = data.message || JSON.stringify(data, null, 2);
+        document.getElementById('chatEvidence').textContent = JSON.stringify({
+          truthClaims: data.truthClaims || [],
+          citations: data.citations || [],
+          limitations: data.limitations || [],
+          status: data.status,
+        }, null, 2);
+      } catch (err) {
+        document.getElementById('chatBody').textContent = String(err);
+      }
     });
   </script>
 </body>
@@ -217,8 +264,56 @@ export async function startDashboardServer(
         return;
       }
       const url = new URL(rawUrl, `http://${host}:${port}`);
+      if (req.method === "POST" && url.pathname === "/api/chat") {
+        const chunks: Buffer[] = [];
+        for await (const chunk of req) {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        }
+        let body: { question?: string } = {};
+        try {
+          body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}") as {
+            question?: string;
+          };
+        } catch {
+          sendJson(res, 400, { error: "invalid JSON body" });
+          return;
+        }
+        const question = typeof body.question === "string" ? body.question.trim() : "";
+        if (!question) {
+          sendJson(res, 400, { error: "question required" });
+          return;
+        }
+        const provider = options.chatProvider ?? createModelProvider(loadAiConfig());
+        if (provider.id === "none") {
+          sendJson(res, 503, {
+            error: "provider-none",
+            message:
+              "AI chat is not configured. Set AGENTDOCTOR_AI_PROVIDER to mock or an OpenAI-compatible provider. Silent mock fallback is disabled.",
+            status: "provider-none",
+          });
+          return;
+        }
+        const chat = new ChatService({
+          root,
+          provider,
+          persistAudit: false,
+        });
+        try {
+          const response = await chat.ask(question);
+          sendJson(res, response.status === "ok" ? 200 : 502, {
+            ...response,
+            cliPreview: formatChatResponseForCli(response),
+            note: "Dashboard chat is ask-only; it does not edit files or run commands.",
+          });
+        } finally {
+          await chat.end();
+        }
+        return;
+      }
       if (req.method !== "GET") {
-        sendJson(res, 405, { error: "read-only dashboard; GET only" });
+        sendJson(res, 405, {
+          error: "dashboard is read-only except POST /api/chat (ask-only; no repo writes)",
+        });
         return;
       }
       if (pathnameLooksHostile(url.pathname)) {

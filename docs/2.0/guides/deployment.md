@@ -45,4 +45,4 @@ Secure secrets via environment / mounted files — never bake credentials into i
 
 ## Upgrades
 
-Current release: **[`@praneeth_54/agentdoctor@2.0.1`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)**. Follow [migration.md](migration.md) for store/API additive changes.
+Current release: **[`@praneeth_54/agentdoctor@2.1.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)**. Follow [migration.md](migration.md) for store/API additive changes.

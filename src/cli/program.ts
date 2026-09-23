@@ -50,6 +50,9 @@ import {
 } from "./commands/policy-graph-run.js";
 import { runArchitectureCommand } from "./commands/architecture.js";
 import { runWorkspaceCommand } from "./commands/workspace.js";
+import { runAskCommand, runChatCommand } from "./commands/chat.js";
+import { runAgentCommand, runPlanCommand } from "./commands/agent.js";
+import { runLearnCommand } from "./commands/learn.js";
 import { collectOpsHealth } from "../ops/health.js";
 import { listSessions, loadSession } from "../platform/sessions/store.js";
 import { exportReports } from "../platform/reports/export.js";
@@ -1467,6 +1470,143 @@ export function createProgram(): Command {
         json: Boolean(options.json),
       });
     });
+
+  program
+    .command("chat")
+    .description(
+      "Project Chat (2.1): evidence-backed conversation about this repository (requires AI provider)",
+    )
+    .argument("[path]", "Repository path (default: current directory)")
+    .action(async (pathArg: string | undefined) => {
+      process.exitCode = await runChatCommand({
+        root: resolveTargetArgument(pathArg),
+      });
+    });
+
+  program
+    .command("ask")
+    .description("One-shot Project Chat question (same engine as chat)")
+    .argument("<question>", "Question about the project")
+    .argument("[path]", "Repository path (default: current directory)")
+    .option("--json", "Emit JSON response", false)
+    .action(async (question: string, pathArg: string | undefined, options: { json?: boolean }) => {
+      process.exitCode = await runAskCommand({
+        question,
+        root: resolveTargetArgument(pathArg),
+        json: Boolean(options.json),
+      });
+    });
+
+  program
+    .command("plan")
+    .description(
+      "Project Agent plan (2.1 M3): understand goal, list likely files, request approval — no file edits",
+    )
+    .argument("<goal>", "What you want to build or change")
+    .argument("[path]", "Repository path (default: current directory)")
+    .option("--json", "Emit JSON plan", false)
+    .option("--approve", "Record human approval (still no writes in M3)", false)
+    .action(
+      async (
+        goal: string,
+        pathArg: string | undefined,
+        options: { json?: boolean; approve?: boolean },
+      ) => {
+        process.exitCode = await runPlanCommand({
+          goal,
+          root: resolveTargetArgument(pathArg),
+          json: Boolean(options.json),
+          approve: Boolean(options.approve),
+        });
+      },
+    );
+
+  program
+    .command("agent")
+    .description(
+      "Project Agent (2.1): list tools, run tools, plan, or apply approved file/command changes",
+    )
+    .argument("[path]", "Repository path (default: current directory)")
+    .option("--list-tools", "List available agent tools", false)
+    .option("--tool <name>", "Run a single tool by name")
+    .option("--goal <text>", "Build a change plan for this goal")
+    .option("--approve", "Record explicit human approval", false)
+    .option("--apply", "Apply approved changes (requires --approve)", false)
+    .option("--apply-ops <json>", "JSON array of {name, arguments} tool ops for --apply")
+    .option("--skip-verify", "Skip post-change verification after apply", false)
+    .option("--run-tests", "Run controlled tests during verification", false)
+    .option("--json", "Emit JSON", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: {
+          listTools?: boolean;
+          tool?: string;
+          goal?: string;
+          approve?: boolean;
+          apply?: boolean;
+          applyOps?: string;
+          skipVerify?: boolean;
+          runTests?: boolean;
+          json?: boolean;
+        },
+      ) => {
+        process.exitCode = await runAgentCommand({
+          root: resolveTargetArgument(pathArg),
+          listTools: Boolean(options.listTools),
+          ...(options.tool !== undefined ? { tool: options.tool } : {}),
+          ...(options.goal !== undefined ? { goal: options.goal } : {}),
+          approve: Boolean(options.approve),
+          apply: Boolean(options.apply),
+          ...(options.applyOps !== undefined ? { applyOpsJson: options.applyOps } : {}),
+          verify: !options.skipVerify,
+          runTests: Boolean(options.runTests),
+          json: Boolean(options.json),
+        });
+      },
+    );
+
+  program
+    .command("learn")
+    .description(
+      "Student Learn mode (2.1 M6): explain project, viva questions, grounded documentation",
+    )
+    .argument("[path]", "Repository path (default: current directory)")
+    .option("--mode <mode>", "LEARN | BUILD_WITH_ME | BUILD_FOR_ME | DEVELOPER", "LEARN")
+    .option("--viva", "Generate viva questions from detected stack", false)
+    .option("--docs", "Generate project documentation sections", false)
+    .option("--build <goal>", "BUILD_WITH_ME / BUILD_FOR_ME: explain, plan, then coding loop")
+    .option("--approve", "Human approval required before BUILD writes", false)
+    .option("--apply-ops <json>", "Deterministic tool ops JSON array for --build --approve")
+    .option("--json", "Emit JSON", false)
+    .option("--mock", "Use MockModelProvider", false)
+    .action(
+      async (
+        pathArg: string | undefined,
+        options: {
+          mode?: string;
+          viva?: boolean;
+          docs?: boolean;
+          build?: string;
+          approve?: boolean;
+          applyOps?: string;
+          json?: boolean;
+          mock?: boolean;
+        },
+      ) => {
+        process.exitCode = await runLearnCommand({
+          root: resolveTargetArgument(pathArg),
+          ...(options.mode !== undefined ? { mode: options.mode } : {}),
+          viva: Boolean(options.viva),
+          docs: Boolean(options.docs),
+          ...(options.build !== undefined ? { build: options.build } : {}),
+          approve: Boolean(options.approve),
+          ...(options.applyOps !== undefined ? { applyOpsJson: options.applyOps } : {}),
+          json: Boolean(options.json),
+          useMock: Boolean(options.mock),
+        });
+      },
+    );
 
   const platform = program
     .command("platform")

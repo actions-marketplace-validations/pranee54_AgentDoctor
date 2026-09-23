@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import { BRAIN_MCP_TOOL_NAMES } from "../../../src/mcp/brain/tools/registry.js";
 import { INTELLIGENCE_MCP_TOOL_NAMES } from "../../../src/mcp/intelligence/registry.js";
+import { AGENT_MCP_TOOL_NAMES } from "../../../src/mcp/agent/registry.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../../..");
@@ -35,7 +36,11 @@ describe("Task4 combined MCP STDIO protocol", () => {
 
     const listed = await client.listTools();
     const names = listed.tools.map((t) => t.name).sort();
-    const expected = [...BRAIN_MCP_TOOL_NAMES, ...INTELLIGENCE_MCP_TOOL_NAMES].sort();
+    const expected = [
+      ...BRAIN_MCP_TOOL_NAMES,
+      ...INTELLIGENCE_MCP_TOOL_NAMES,
+      ...AGENT_MCP_TOOL_NAMES,
+    ].sort();
     expect(names).toEqual(expected);
 
     const overview = await client.callTool({ name: "repo_overview", arguments: {} });

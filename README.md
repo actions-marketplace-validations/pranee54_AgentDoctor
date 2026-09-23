@@ -9,9 +9,10 @@ Understand your codebase, assess the impact of changes, govern engineering knowl
 [![Node](https://img.shields.io/node/v/@praneeth_54/agentdoctor)](https://nodejs.org)
 [![License](https://img.shields.io/github/license/pranee54/AgentDoctor)](LICENSE)
 
-**Published:** [`@praneeth_54/agentdoctor@2.0.1`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
+**Published:** [`@praneeth_54/agentdoctor@2.1.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor)
+**Release notes:** [docs/RELEASE_2_1_0.md](docs/RELEASE_2_1_0.md) · Prior assurance cut: [docs/2.0.1/README.md](docs/2.0.1/README.md)
 
-[Install](#install) · [Quickstart](#quickstart) · [Change assurance](#change-assurance) · [Documentation](docs/2.0.1/README.md) · [MCP](#mcp) · [GitHub Action](#github-action) · [Architecture](#architecture)
+[Install](#install) · [Quickstart](#quickstart) · [Change assurance](#change-assurance) · [Project AI (2.1)](#project-ai-agent-21) · [Documentation](docs/2.0.1/README.md) · [MCP](#mcp) · [GitHub Action](#github-action) · [Architecture](#architecture)
 
 ---
 
@@ -23,9 +24,27 @@ AI agents can write code quickly. The harder engineering problem is knowing whet
 
 AgentDoctor collects repository signals — source structure, graphs, Git history, policies, knowledge, and verification evidence — so humans and agents can reason about changes with fewer unsupported assumptions.
 
-It is **not** an autonomous coding agent, chatbot, or IDE interceptor. It does **not** guarantee correctness. It produces **evidence and controls** you can inspect.
+**Who it is for**
 
-**Short description:** Engineering assurance for AI coding agents — repository intelligence, change evidence, safety controls, and MCP tools.
+| Audience               | How AgentDoctor helps                                                         |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| Manual developers      | Scan / fix / verify, change impact, evidence, architecture and policy checks  |
+| Students               | `learn` — explain project, viva, docs; **BUILD_WITH_ME** after approval       |
+| AI-assisted developers | Optional Project Chat (`ask` / `chat`) with evidence and truth labels         |
+| AI coding agents       | MCP + controlled tools; AgentDoctor owns context, execution, and verification |
+
+It is **not** a generic chatbot, IDE interceptor, or claim of full autonomy. Optional Project AI (2.1) is **opt-in** and still subject to approvals, path/runner controls, and verification. It does **not** guarantee correctness. It produces **evidence and controls** you can inspect.
+
+**Architecture (when AI is enabled):**
+
+```text
+THE MODEL REASONS.
+AGENTDOCTOR PROVIDES PROJECT CONTEXT.
+AGENTDOCTOR CONTROLS TOOLS.
+AGENTDOCTOR VERIFIES RESULTS.
+```
+
+**Short description:** Engineering assurance for AI coding agents — repository intelligence, change evidence, safety controls, MCP tools, and an optional Project AI Agent.
 
 ---
 
@@ -109,8 +128,10 @@ Details and evidence: [docs/2.0/overview/capabilities.md](docs/2.0/overview/capa
 | --------------------------------------------------------------------------------- | --------- |
 | Brain MCP (`brain_*` tools, STDIO)                                                | SUPPORTED |
 | Combined MCP (Brain + intelligence tools)                                         | PARTIAL   |
+| Agent MCP (`project_ask`, path-safe file tools, plan, change verify) — 2.1        | PARTIAL   |
+| Optional Project Chat / coding agent CLI (`chat`, `ask`, `agent`, `learn`) — 2.1  | PARTIAL   |
 | Agent adapters (Cursor, Claude Code, Codex, Copilot, Windsurf, Gemini CLI, Aider) | SUPPORTED |
-| Local dashboard + `/api/v2/*`                                                     | PARTIAL   |
+| Local dashboard + `/api/v2/*` + ask-only `/api/chat` — 2.1                        | PARTIAL   |
 | Programmatic API (`scan`, Fix, Brain helpers)                                     | SUPPORTED |
 
 ### Safety & governance
@@ -217,9 +238,9 @@ Canonical docs: [docs/2.0/overview/architecture.md](docs/2.0/overview/architectu
 Requires **Node.js 20+**.
 
 ```bash
-npm install -g @praneeth_54/agentdoctor@2.0.1
+npm install -g @praneeth_54/agentdoctor@2.1.0
 # or:
-npx @praneeth_54/agentdoctor@2.0.1 --help
+npx @praneeth_54/agentdoctor@2.1.0 --help
 ```
 
 From source:
@@ -236,7 +257,7 @@ npm run verify
 ## Quickstart
 
 ```bash
-agentdoctor --version          # 2.0.1
+agentdoctor --version          # 2.1.0
 agentdoctor scan .
 agentdoctor scan . --json
 agentdoctor fix --dry-run
@@ -270,7 +291,39 @@ agentdoctor brain-mcp --root /ABS/PATH/TO/REPO
 agentdoctor mcp --root /ABS/PATH/TO/REPO
 ```
 
+### Project AI Agent (2.1 — optional; local RC)
+
+Requires an explicit provider (`AGENTDOCTOR_AI_PROVIDER=mock` or openai-compatible / ollama). Default `none` fails closed for chat.
+
+```bash
+agentdoctor ask "How does login work?" .
+agentdoctor chat .
+agentdoctor learn .
+agentdoctor learn --viva
+agentdoctor plan "Add registration"
+# Writes require --approve; model cannot self-approve
+agentdoctor agent --goal "Add registration" --approve --apply --apply-ops '[...]' .
+```
+
+Details: [docs/RELEASE_2_1_0.md](docs/RELEASE_2_1_0.md) · [docs/AI_AGENT.md](docs/AI_AGENT.md) · [docs/SECURITY_AGENT.md](docs/SECURITY_AGENT.md)
+
 CLI reference: [docs/2.0/guides/cli.md](docs/2.0/guides/cli.md) · Change assurance: [docs/2.0.1/change-assurance.md](docs/2.0.1/change-assurance.md)
+
+---
+
+## Project AI Agent (2.1)
+
+Optional Project AI on top of the 2.0.1 assurance substrate. See [docs/RELEASE_2_1_0.md](docs/RELEASE_2_1_0.md).
+
+| Piece     | Behavior                                                                  |
+| --------- | ------------------------------------------------------------------------- |
+| Context   | Project evidence with truth labels; repository text is untrusted DATA     |
+| Tools     | Path-safe read/write; commands only via controlled runner (`shell=false`) |
+| Approvals | Human/caller `--approve` required for writes; LEARN mode cannot write     |
+| Verify    | Change / evidence / proof signals; `ENGINEERING_CORRECTNESS_NOT_CLAIMED`  |
+| Limits    | Tool calls, iterations, wall time, files modified, context size           |
+
+Limitations: not an OS sandbox; native Anthropic/Gemini SDKs not implemented; MCP `approved=true` is trusted-caller input (not cryptographic identity); correctness never guaranteed.
 
 ---
 
@@ -309,13 +362,13 @@ Guide: [docs/2.0/guides/mcp.md](docs/2.0/guides/mcp.md) · Deep Brain MCP: [docs
 
 ## GitHub Action
 
-Use AgentDoctor Safety in CI for scan / verify gates. Default npm version input is **`2.0.1`**.
+Use AgentDoctor Safety in CI for scan / verify gates. Default npm version input is **`2.1.0`**.
 
 ```yaml
-- uses: pranee54/AgentDoctor@v2.0.1
+- uses: pranee54/AgentDoctor@v2.1.0
   with:
     path: .
-    version: "2.0.1"
+    version: "2.1.0"
     fail-on-severity: critical
 ```
 

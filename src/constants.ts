@@ -1,6 +1,6 @@
 import type { AgentId } from "./types/index.js";
 
-export const PACKAGE_VERSION = "2.0.1";
+export const PACKAGE_VERSION = "2.1.0";
 
 export const DEFAULT_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MiB
 

@@ -3,11 +3,12 @@
 AgentDoctor provides **engineering intelligence and safety for AI coding agents** — repository understanding, knowledge governance, safety controls, MCP interfaces, and verification evidence.
 
 ```text
-Today (shipped — 2.0.1 partial Change Proof)
+Today (shipped — 2.1.0 optional Project AI + 2.0.1 assurance)
 Repository → Understand → Analyze → Govern → Change → Verify → Evidence
+(+ optional: Project Chat / agent tools / student BUILD_WITH_ME)
 
 Direction (not fully shipped)
-Full Change Proof UX → Agent Context → Agent Reliability → Team-scale intelligence
+Full Change Proof UX → richer student UI → Team-scale intelligence
 ```
 
 Status legend:
@@ -109,6 +110,16 @@ Published as [`@praneeth_54/agentdoctor@2.0.0`](https://www.npmjs.com/package/@p
 Adds repository intelligence (AST graph, Git hotspots, impact), Repository Brain proposals, governed knowledge, combined MCP, local dashboard / API surfaces, and Action default pin `2.0.0` — while preserving Safety CLI contracts and Brain MCP tool names.
 
 Canonical docs: [docs/2.0/README.md](docs/2.0/README.md) · readiness: [docs/2.0/overview/readiness-matrix.md](docs/2.0/overview/readiness-matrix.md)
+
+---
+
+## 2.1.0 — Optional Project AI Agent — ✅ Released
+
+Published: [`@praneeth_54/agentdoctor@2.1.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor).
+
+Adds optional Project Chat, coding agent tools (path-safe, approval-gated), student BUILD_WITH_ME, agent MCP subset, and dashboard ask-only chat — on top of the 2.0.1 assurance substrate. AI remains opt-in. Correctness is never claimed.
+
+Docs: [docs/RELEASE_2_1_0.md](docs/RELEASE_2_1_0.md)
 
 ---
 
