@@ -7,13 +7,21 @@ function sid(kind: string, key: string): string {
   return `${kind}:${createHash("sha256").update(key).digest("hex").slice(0, 12)}`;
 }
 
+const PHP_PROBE_TIMEOUT_MS = 5_000;
+const PHP_EXTRACT_TIMEOUT_MS = 15_000;
+
 /**
  * Real PHP token extractor via `php -r` + token_get_all (requires `php` on PATH).
  * Not regex. If php is missing, capabilities are unsupported.
+ * Probe timeout skips hanging Windows Store / stub `php` binaries.
  */
 export function phpAvailable(): boolean {
-  const r = spawnSync("php", ["-r", "echo PHP_VERSION;"], { encoding: "utf8" });
-  return r.status === 0 && Boolean(r.stdout?.trim());
+  const r = spawnSync("php", ["-r", "echo PHP_VERSION;"], {
+    encoding: "utf8",
+    timeout: PHP_PROBE_TIMEOUT_MS,
+    windowsHide: true,
+  });
+  return r.status === 0 && !r.error && Boolean(r.stdout?.trim());
 }
 
 const PHP_EXTRACTOR = `
@@ -123,6 +131,8 @@ export const phpAdapter: LanguageAdapter = {
       input: source,
       encoding: "utf8",
       maxBuffer: 8 * 1024 * 1024,
+      timeout: PHP_EXTRACT_TIMEOUT_MS,
+      windowsHide: true,
     });
     if (r.status !== 0 || !r.stdout) {
       return {

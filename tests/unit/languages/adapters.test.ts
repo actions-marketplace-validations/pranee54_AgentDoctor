@@ -58,13 +58,13 @@ class Box {}
     expect(result.symbols.some((s) => s.name === "greet" && s.evidence === "ast")).toBe(true);
     expect(result.symbols.some((s) => s.name === "Box")).toBe(true);
     expect(result.imports.some((i) => i.specifier.includes("App"))).toBe(true);
-  }, 20_000);
+  }, 30_000);
 
   it("does not fake Go AST when go toolchain missing or extractor absent", async () => {
     const result = await goAdapter.parse("main.go", "package main\nfunc main() {}");
     expect(result.ok).toBe(false);
     expect(result.capabilities.parse).toBe("unsupported");
-  }, 20_000);
+  }, 30_000);
 
   it("does not fake Java AST", async () => {
     const result = await parseSourceFile("Main.java", "class Main {}");

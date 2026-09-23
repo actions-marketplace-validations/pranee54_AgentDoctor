@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../..");
 
 /** Pack + install pulls registry deps; Windows CI needs well above Vitest's 5s default. */
-const PACK_INSTALL_TEST_TIMEOUT_MS = 120_000;
+const PACK_INSTALL_TEST_TIMEOUT_MS = 240_000;
 
 const tempDirs: string[] = [];
 

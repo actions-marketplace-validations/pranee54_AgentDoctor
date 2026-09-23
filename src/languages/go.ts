@@ -2,6 +2,8 @@ import { spawnSync } from "node:child_process";
 
 import type { LanguageAdapter, ParseResult } from "./types.js";
 
+const GO_PROBE_TIMEOUT_MS = 5_000;
+
 /**
  * Go toolchain bridge placeholder.
  * Prefer real `go/ast` via `go run` when the Go toolchain is present; until an
@@ -9,8 +11,12 @@ import type { LanguageAdapter, ParseResult } from "./types.js";
  * Today: always unsupported (no bundled extractor; avoids fake AST claims).
  */
 export function goAvailable(): boolean {
-  const r = spawnSync("go", ["version"], { encoding: "utf8" });
-  return r.status === 0;
+  const r = spawnSync("go", ["version"], {
+    encoding: "utf8",
+    timeout: GO_PROBE_TIMEOUT_MS,
+    windowsHide: true,
+  });
+  return r.status === 0 && !r.error;
 }
 
 export const goAdapter: LanguageAdapter = {
