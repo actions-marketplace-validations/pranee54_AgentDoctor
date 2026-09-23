@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -73,11 +74,14 @@ export async function listDirectorySafe(
 export async function atomicWriteTextFile(filePath: string, content: string): Promise<void> {
   const dir = path.dirname(filePath);
   await fs.mkdir(dir, { recursive: true });
-  const tmp = path.join(
-    dir,
-    `.${path.basename(filePath)}.agentdoctor.${process.pid}.${Date.now()}.tmp`,
-  );
-  await fs.writeFile(tmp, content, "utf8");
+  const tmp = path.join(dir, `.${path.basename(filePath)}.${randomBytes(16).toString("hex")}.tmp`);
+  // Exclusive create — avoid predictable overwrite of an existing temp name.
+  const handle = await fs.open(tmp, "wx");
+  try {
+    await handle.writeFile(content, "utf8");
+  } finally {
+    await handle.close();
+  }
   try {
     await replaceFile(tmp, filePath);
   } catch (error) {

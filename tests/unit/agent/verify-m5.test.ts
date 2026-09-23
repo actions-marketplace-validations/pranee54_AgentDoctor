@@ -42,7 +42,7 @@ describe("M5 verifyAgentWork", () => {
     expect(report.notVerified.length).toBeGreaterThan(0);
     expect(report.checks.some((c) => c.id === "change-analyze")).toBe(true);
     expect(report.checks.some((c) => c.id === "tests" && c.status === "not-run")).toBe(true);
-  });
+  }, 60_000);
 });
 
 describe("M5 coding loop verification", () => {

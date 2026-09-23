@@ -169,7 +169,7 @@ function matchTsconfigPath(
       ) {
         const star = specifier.slice(prefix.length, specifier.length - suffix.length);
         const target = targets[0]!;
-        const mapped = target.includes("*") ? target.replace("*", star) : target;
+        const mapped = target.includes("*") ? target.split("*").join(star) : target;
         return { mapped, pattern };
       }
     } else if (specifier === pattern) {
