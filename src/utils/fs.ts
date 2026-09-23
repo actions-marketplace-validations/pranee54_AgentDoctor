@@ -75,8 +75,8 @@ export async function atomicWriteTextFile(filePath: string, content: string): Pr
   const dir = path.dirname(filePath);
   await fs.mkdir(dir, { recursive: true });
   const tmp = path.join(dir, `.${path.basename(filePath)}.${randomBytes(16).toString("hex")}.tmp`);
-  // Exclusive create — avoid predictable overwrite of an existing temp name.
-  const handle = await fs.open(tmp, "wx");
+  // Exclusive create + owner-only mode — closes CodeQL js/insecure-temporary-file.
+  const handle = await fs.open(tmp, "wx", 0o600);
   try {
     await handle.writeFile(content, "utf8");
   } finally {
