@@ -30,7 +30,7 @@ Non-spam outreach after AgentDoctor **1.1.0**. Goal is feedback quality, not van
 
 > You’ve been deep in Cursor/Claude agent workflows. I shipped AgentDoctor 1.1.0 — local Project Brain + MCP tools so agents get claims/evidence/confidence instead of only file search.
 > Could you point MCP at one repo you know and tell me where `brain_overview` / `brain_ownership` / `brain_risk` is wrong or unexpectedly UNKNOWN?
-> Quickstart: https://github.com/pranee54/AgentDoctor/blob/main/docs/quickstart.md
+> Quickstart: https://github.com/pranee54/AgentDoctor/blob/main/docs/guides/quickstart.md
 
 ## Template 2 — Open-source maintainer
 

@@ -2,6 +2,7 @@ import type { FixApplyResult, FixPlan } from "./types.js";
 import { previewClaudeSettingsActions } from "./writers/claude-settings.js";
 import { previewCodexConfigActions } from "./writers/codex-config.js";
 import { previewCursorignoreActions } from "./writers/cursorignore.js";
+import { previewSimpleIgnoreActions } from "./writers/simple-ignore.js";
 
 export function renderFixPlanTerminal(
   plan: FixPlan,
@@ -10,6 +11,8 @@ export function renderFixPlanTerminal(
     cursorContent: string | null;
     claudeSettingsContent?: string | null;
     codexConfigContent?: string | null;
+    geminiignoreContent?: string | null;
+    aiderignoreContent?: string | null;
     applyResult?: FixApplyResult;
   },
 ): string {
@@ -55,49 +58,77 @@ export function renderFixPlanTerminal(
     plan.actions,
   );
   const codexPreview = previewCodexConfigActions(options.codexConfigContent ?? null, plan.actions);
+  const geminiPreview = previewSimpleIgnoreActions(
+    options.geminiignoreContent ?? null,
+    plan.actions,
+    { agent: "gemini-cli", targetRelativePath: ".geminiignore" },
+  );
+  const aiderPreview = previewSimpleIgnoreActions(
+    options.aiderignoreContent ?? null,
+    plan.actions,
+    { agent: "aider", targetRelativePath: ".aiderignore" },
+  );
 
-  if (cursorPreview || claudePreview || codexPreview) {
+  type AnyPreview = {
+    targetRelativePath: string;
+    preview: string;
+    patternsToAdd?: string[];
+    denyRulesToAdd?: string[];
+    denyKeysToAdd?: string[];
+  };
+
+  const previews: AnyPreview[] = [
+    cursorPreview,
+    claudePreview,
+    codexPreview,
+    geminiPreview,
+    aiderPreview,
+  ].filter((p): p is NonNullable<typeof p> => p !== null);
+
+  if (previews.length > 0) {
     lines.push("");
     lines.push("  File changes:");
     let shown = false;
-    if (cursorPreview) {
-      lines.push(
-        `    ${cursorPreview.targetRelativePath} (+${cursorPreview.patternsToAdd.length} pattern(s))`,
-      );
-      lines.push("");
-      for (const previewLine of cursorPreview.preview.split("\n")) {
-        lines.push(`  ${previewLine}`);
-      }
-      shown = true;
-    }
-    if (claudePreview) {
+    for (const preview of previews) {
       if (shown) {
         lines.push("");
       }
-      lines.push(
-        `    ${claudePreview.targetRelativePath} (+${claudePreview.denyRulesToAdd.length} deny rule(s))`,
-      );
+      const count =
+        preview.patternsToAdd?.length ??
+        preview.denyRulesToAdd?.length ??
+        preview.denyKeysToAdd?.length ??
+        0;
+      const unit = preview.patternsToAdd
+        ? "pattern(s)"
+        : preview.denyRulesToAdd
+          ? "deny rule(s)"
+          : "deny key(s)";
+      lines.push(`    ${preview.targetRelativePath} (+${count} ${unit})`);
       lines.push("");
-      for (const previewLine of claudePreview.preview.split("\n")) {
+      for (const previewLine of preview.preview.split("\n")) {
         lines.push(`  ${previewLine}`);
       }
       shown = true;
-    }
-    if (codexPreview) {
-      if (shown) {
-        lines.push("");
-      }
-      lines.push(
-        `    ${codexPreview.targetRelativePath} (+${codexPreview.denyKeysToAdd.length} deny key(s))`,
-      );
-      lines.push("");
-      for (const previewLine of codexPreview.preview.split("\n")) {
-        lines.push(`  ${previewLine}`);
-      }
     }
   }
 
-  if (options.applyResult && !options.dryRun) {
+  if (options.applyResult?.error) {
+    lines.push("");
+    if (options.applyResult.partial) {
+      lines.push(
+        `  Partial apply: wrote ${options.applyResult.writtenFiles.join(", ") || "(none)"} then failed on ${options.applyResult.failedTarget ?? "unknown target"}`,
+      );
+      lines.push(`  Error: ${options.applyResult.error}`);
+      lines.push(
+        "  Safe Fix is not transactional across multiple files — review written paths manually.",
+      );
+    } else {
+      lines.push(`  Fix aborted before/during write: ${options.applyResult.error}`);
+      if (options.applyResult.failedTarget) {
+        lines.push(`  Target: ${options.applyResult.failedTarget}`);
+      }
+    }
+  } else if (options.applyResult && !options.dryRun) {
     lines.push("");
     if (options.applyResult.writtenFiles.length > 0) {
       lines.push(`  Wrote: ${options.applyResult.writtenFiles.join(", ")}`);

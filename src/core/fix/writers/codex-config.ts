@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { atomicWriteTextFile, readTextFile } from "../../../utils/fs.js";
 import { codexDenyKey, configTextDeniesPath } from "../../rules/codex-deny.js";
+import { resolveSafeFixWritePath } from "../safe-target.js";
 import type { FixAction } from "../types.js";
 
 const MAX_BYTES = 512 * 1024;
@@ -76,7 +77,7 @@ export function buildCodexConfigContent(
       next += `"." = "write"\n`;
     }
     for (const key of denyKeysToAdd) {
-      next += `"${key}" = "deny"\n`;
+      next += `${formatTomlDenyAssignment(key)}\n`;
     }
     if (!next.includes(END_MARKER)) {
       next += `${END_MARKER}\n`;
@@ -90,7 +91,7 @@ export function buildCodexConfigContent(
     if (configTextDeniesPath(body, key) || configTextDeniesPath(next, key)) {
       continue;
     }
-    linesToInsert.push(`"${key}" = "deny"`);
+    linesToInsert.push(formatTomlDenyAssignment(key).trimEnd());
   }
   if (linesToInsert.length === 0) {
     return next;
@@ -139,7 +140,8 @@ export async function readCodexConfig(root: string): Promise<string | null> {
 }
 
 export async function writeCodexConfig(root: string, content: string): Promise<void> {
-  await atomicWriteTextFile(path.join(root, CONFIG_RELATIVE), content);
+  const { absolutePath } = await resolveSafeFixWritePath(root, CONFIG_RELATIVE);
+  await atomicWriteTextFile(absolutePath, content);
 }
 
 export function assertWritableCodexConfig(content: string): void {
@@ -220,6 +222,28 @@ function ensureTrailingNewline(value: string): string {
     return value;
   }
   return `${value}\n`;
+}
+
+/** Escape a filesystem deny key for a TOML basic string assignment. */
+export function formatTomlDenyAssignment(key: string): string {
+  assertSafeCodexDenyKey(key);
+  return `"${escapeTomlBasicString(key)}" = "deny"`;
+}
+
+export function assertSafeCodexDenyKey(key: string): void {
+  if (key.length === 0) {
+    throw new Error("refusing empty Codex deny key");
+  }
+  for (let i = 0; i < key.length; i++) {
+    const code = key.charCodeAt(i);
+    if (code < 32) {
+      throw new Error("refusing Codex deny key with control characters");
+    }
+  }
+}
+
+function escapeTomlBasicString(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function formatSimpleDiff(fileLabel: string, before: string, after: string): string {

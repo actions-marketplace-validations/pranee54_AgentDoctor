@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentdoctor.local/schemas/v2/baseline-diff.json",
+  "title": "BaselineDiff",
+  "type": "object",
+  "required": ["name", "added", "removed", "recurring", "unchanged"],
+  "properties": {
+    "name": { "type": "string" },
+    "added": { "type": "array", "items": { "type": "string" } },
+    "removed": { "type": "array", "items": { "type": "string" } },
+    "recurring": { "type": "array", "items": { "type": "string" } },
+    "unchanged": { "type": "integer" }
+  }
+}

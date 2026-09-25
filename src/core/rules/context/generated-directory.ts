@@ -51,6 +51,20 @@ async function agentsStillExposed(
     if (agent === "codex" && (await codexDeniesPath(context, relativePath))) {
       continue;
     }
+    if (
+      agent === "gemini-cli" &&
+      (context.ignore.matchesGeminiignore(relativePath) ||
+        context.ignore.matchesGeminiignore(`${relativePath}/`))
+    ) {
+      continue;
+    }
+    if (
+      agent === "aider" &&
+      (context.ignore.matchesAiderignore(relativePath) ||
+        context.ignore.matchesAiderignore(`${relativePath}/`))
+    ) {
+      continue;
+    }
     exposed.push(agent);
   }
   return exposed;
@@ -105,7 +119,7 @@ export const generatedDirectoryRule: RuleDefinition = {
           message: `${relativePath}/ (${entry.label}) is present and no project ignore pattern was detected`,
           whyItMatters:
             "Generated directories are usually low-value for coding agents and can bloat indexing/context when not excluded.",
-          recommendation: `Add an ignore pattern covering ${relativePath}/ to .gitignore and agent exclusions (.cursorignore, Claude Code Read deny, and/or Codex filesystem deny).`,
+          recommendation: `Add an ignore pattern covering ${relativePath}/ to .gitignore and agent exclusions (.cursorignore, Claude Code Read deny, Codex filesystem deny, .geminiignore, and/or .aiderignore).`,
           affectedAgents: affected,
           evidence: { path: relativePath },
           fixability: "safe",

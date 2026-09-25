@@ -1,7 +1,7 @@
 {
   "name": "@praneeth_54/agentdoctor",
-  "version": "1.1.0",
-  "description": "Audit AI coding agent configuration in a repository — local, deterministic, no API key.",
+  "version": "2.1.0",
+  "description": "Engineering assurance for AI coding agents — repository intelligence, change evidence, safety controls, and MCP tools.",
   "type": "module",
   "bin": {
     "agentdoctor": "./dist/cli/index.js"
@@ -40,7 +40,7 @@
     "validate:project-brain": "tsx validation/project-brain/run.ts",
     "validate:project-brain:real-world": "tsx validation/project-brain/real-world-run.ts",
     "benchmark:project-brain": "tsx validation/project-brain/benchmark.ts",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm test",
     "verify:understanding": "npm run typecheck && npm run test:understanding",
     "verify:project-brain": "npm run typecheck && npm run test:understanding && npm run validate:project-brain && npm run benchmark:project-brain",
     "verify:mcp": "npm run typecheck && npm run test:mcp",
@@ -54,7 +54,14 @@
     "cursor",
     "claude-code",
     "codex",
+    "copilot",
+    "windsurf",
+    "gemini",
+    "aider",
     "mcp",
+    "change-assurance",
+    "evidence",
+    "engineering-assurance",
     "security",
     "linter",
     "cli",
@@ -76,17 +83,20 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "@types/pg": "^8.23.1",
     "commander": "^14.0.3",
-    "picocolors": "^1.1.1"
+    "jose": "^6.2.12",
+    "pg": "^8.23.0",
+    "picocolors": "^1.1.1",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^22.19.1",
     "eslint": "^9.39.2",
     "prettier": "^3.7.4",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0",
+    "tsx": "^4.23.13",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^3.2.4"
   },
   "overrides": {

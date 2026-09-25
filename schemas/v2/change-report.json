@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentdoctor.local/schemas/v2/change-report.json",
+  "title": "ChangeReport",
+  "type": "object",
+  "required": ["root", "gitAvailable", "files", "summary", "limitations"],
+  "properties": {
+    "root": { "type": "string" },
+    "gitAvailable": { "type": "boolean" },
+    "head": { "type": ["string", "null"] },
+    "since": { "type": ["string", "null"] },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "kind", "staged"],
+        "properties": {
+          "path": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["added", "modified", "deleted", "renamed", "untracked", "unknown"]
+          },
+          "staged": { "type": "boolean" },
+          "modules": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["added", "modified", "deleted", "renamed", "untracked"],
+      "properties": {
+        "added": { "type": "integer" },
+        "modified": { "type": "integer" },
+        "deleted": { "type": "integer" },
+        "renamed": { "type": "integer" },
+        "untracked": { "type": "integer" }
+      }
+    },
+    "impact": {
+      "type": "object",
+      "required": ["status", "reason", "edges", "relatedPaths"],
+      "properties": {
+        "status": { "type": "string", "enum": ["observed", "unknown"] },
+        "reason": { "type": "string" },
+        "edges": { "type": "array" },
+        "relatedPaths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  }
+}

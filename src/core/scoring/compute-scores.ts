@@ -14,7 +14,7 @@ const SEVERITY_SORT_RANK: Record<Severity, number> = {
 
 /**
  * v1 readiness scores from post-dedupe findings.
- * Spec: docs/scoring.md
+ * Spec: docs/reference/scoring.md
  */
 export function computeReadinessScores(findings: readonly Finding[]): Scores {
   const overallRaw = 100 - sumDeductions(findings);
@@ -34,6 +34,10 @@ export function computeReadinessScores(findings: readonly Finding[]): Scores {
       cursor: scoreSubset(findings.filter((f) => f.affectedAgents.includes("cursor"))),
       "claude-code": scoreSubset(findings.filter((f) => f.affectedAgents.includes("claude-code"))),
       codex: scoreSubset(findings.filter((f) => f.affectedAgents.includes("codex"))),
+      copilot: scoreSubset(findings.filter((f) => f.affectedAgents.includes("copilot"))),
+      windsurf: scoreSubset(findings.filter((f) => f.affectedAgents.includes("windsurf"))),
+      "gemini-cli": scoreSubset(findings.filter((f) => f.affectedAgents.includes("gemini-cli"))),
+      aider: scoreSubset(findings.filter((f) => f.affectedAgents.includes("aider"))),
     },
   };
 }

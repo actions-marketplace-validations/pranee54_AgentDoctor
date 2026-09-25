@@ -7,6 +7,10 @@ import { detectAgents } from "../../../src/agents/detect-agents.js";
 import { detectCursor } from "../../../src/agents/cursor/detector.js";
 import { detectClaudeCode } from "../../../src/agents/claude/detector.js";
 import { detectCodex } from "../../../src/agents/codex/detector.js";
+import { detectCopilot } from "../../../src/agents/copilot/detector.js";
+import { detectWindsurf } from "../../../src/agents/windsurf/detector.js";
+import { detectGeminiCli } from "../../../src/agents/gemini/detector.js";
+import { detectAider } from "../../../src/agents/aider/detector.js";
 import { discoverFiles } from "../../../src/discovery/files.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -87,6 +91,63 @@ describe("Codex detection", () => {
   });
 });
 
+describe("Copilot detection", () => {
+  it("configures copilot-project from repo and path instructions", async () => {
+    const result = await detectCopilot(await contextFor("copilot-project"));
+    expect(result.detected).toBe(true);
+    expect(result.configured).toBe(true);
+    expect(result.status).toBe("configured");
+    expect(result.configPaths).toEqual(
+      expect.arrayContaining([
+        ".github/copilot-instructions.md",
+        ".github/instructions/typescript.instructions.md",
+      ]),
+    );
+    expect(result.metadata.repoInstructionsCount).toBe(1);
+    expect(result.metadata.pathInstructionsCount).toBe(1);
+  });
+
+  it("treats empty copilot-instructions as detected but not configured", async () => {
+    const result = await detectCopilot(await contextFor("copilot-empty"));
+    expect(result.detected).toBe(true);
+    expect(result.configured).toBe(false);
+    expect(result.status).toBe("detected");
+    expect(result.diagnostics.some((d) => d.code === "copilot/empty-instruction")).toBe(true);
+  });
+});
+
+describe("Windsurf detection", () => {
+  it("configures windsurf-project from .windsurf/rules", async () => {
+    const result = await detectWindsurf(await contextFor("windsurf-project"));
+    expect(result.detected).toBe(true);
+    expect(result.configured).toBe(true);
+    expect(result.configPaths).toEqual(expect.arrayContaining([".windsurf/rules/coding.md"]));
+  });
+});
+
+describe("Gemini CLI detection", () => {
+  it("configures gemini-project from GEMINI.md and settings", async () => {
+    const result = await detectGeminiCli(await contextFor("gemini-project"));
+    expect(result.detected).toBe(true);
+    expect(result.configured).toBe(true);
+    expect(result.configPaths).toEqual(
+      expect.arrayContaining(["GEMINI.md", ".gemini/settings.json"]),
+    );
+    expect(result.metadata.hasGeminiignore).toBe(true);
+  });
+});
+
+describe("Aider detection", () => {
+  it("configures aider-project from conf, ignore, and conventions", async () => {
+    const result = await detectAider(await contextFor("aider-project"));
+    expect(result.detected).toBe(true);
+    expect(result.configured).toBe(true);
+    expect(result.configPaths).toEqual(
+      expect.arrayContaining([".aider.conf.yml", ".aiderignore", "CONVENTIONS.md"]),
+    );
+  });
+});
+
 describe("detectAgents orchestration", () => {
   it("marks clean-project agents as not configured", async () => {
     const { agents } = await detectAgents(await contextFor("clean-project"));
@@ -94,11 +155,19 @@ describe("detectAgents orchestration", () => {
     expect(agents.every((a) => !a.detected)).toBe(true);
   });
 
-  it("marks all three agents configured on multi-agent-project", async () => {
+  it("marks cursor, claude-code, and codex configured on multi-agent-project", async () => {
     const { agents } = await detectAgents(await contextFor("multi-agent-project"));
     const byId = Object.fromEntries(agents.map((a) => [a.id, a]));
     expect(byId.cursor?.configured).toBe(true);
     expect(byId["claude-code"]?.configured).toBe(true);
     expect(byId.codex?.configured).toBe(true);
+    expect(byId.copilot?.configured).toBe(false);
+  });
+
+  it("marks copilot configured on copilot-project", async () => {
+    const { agents } = await detectAgents(await contextFor("copilot-project"));
+    const byId = Object.fromEntries(agents.map((a) => [a.id, a]));
+    expect(byId.copilot?.configured).toBe(true);
+    expect(byId.cursor?.configured).toBe(false);
   });
 });

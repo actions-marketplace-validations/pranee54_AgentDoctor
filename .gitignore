@@ -1,6 +1,6 @@
 node_modules/
 dist/
-coverage/
+/coverage/
 test-results/
 tmp/
 .tmp/
@@ -53,7 +53,29 @@ validation/real-world/history/*
 
 # Local Project Brain state (generated snapshots under .agentdoctor/project-brain/)
 .agentdoctor/
+# Keep committed plugin fixtures for CI (discoverPlugins / runPluginAnalyzers)
+!fixtures/**/.agentdoctor/
+!fixtures/**/.agentdoctor/**
+
+# Local Cursor IDE / MCP config (machine-absolute paths; never publish)
+.cursor/
+
+# Flutter / Dart generated (fixtures may create these during local scans)
+**/.dart_tool/
+**/local.properties
+fixtures/**/pubspec.lock
+**/GeneratedPluginRegistrant.java
+
+# Local MCP-agent validation run output
+validation/mcp-agent/results.json
 
 # Local-only internal docs / notes (never publish)
 .private/
 AgentDoctorOS/
+
+# Release / local pack artifacts
+*.tgz
+praneeth_54-agentdoctor-*.tgz
+
+# Generated local perf snapshots (regenerate via scripts/perf/ast-graph.mjs)
+benchmarks/ast-graph-perf-latest.json

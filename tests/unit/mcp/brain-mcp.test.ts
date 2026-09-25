@@ -207,6 +207,29 @@ describe("Brain MCP tools", () => {
     });
   });
 
+  it("re-redacts secret-like claims when loading a snapshot into the session", async () => {
+    const root = await makeIsolatedFixtureCopy();
+    const session = await sessionFor(root);
+    const snapshotId = session.getBrain().snapshot.id;
+    const store = session.getStore();
+    const originalLoad = store.loadSnapshot.bind(store);
+    store.loadSnapshot = async (id: string) => {
+      const brain = await originalLoad(id);
+      expect(brain.claims.length).toBeGreaterThan(0);
+      const base = brain.claims[0]!;
+      return {
+        ...brain,
+        claims: [{ ...base, object: "password=should-not-reach-mcp-memory" }],
+      };
+    };
+
+    const loaded = await session.loadSnapshot(snapshotId);
+    expect(
+      loaded.claims.some((c) => String(c.object).includes("should-not-reach-mcp-memory")),
+    ).toBe(false);
+    expect(loaded.claims.some((c) => c.object === "[REDACTED]")).toBe(true);
+  });
+
   it("cross-process: load persisted brain from a fresh session", async () => {
     const root = await makeIsolatedFixtureCopy();
     const first = await sessionFor(root);

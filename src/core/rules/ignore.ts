@@ -1,17 +1,25 @@
 import { toRepoRelativePosix } from "../../utils/path.js";
 
 /**
- * Minimal gitignore-style pattern matching for .gitignore / .cursorignore.
+ * Minimal gitignore-style pattern matching for .gitignore / agent ignore files.
  * Supports common patterns used in agent ignore files — not a full gitignore clone.
  */
 
 export interface IgnoreIndex {
   gitignorePatterns: string[];
   cursorignorePatterns: string[];
+  geminiignorePatterns: string[];
+  aiderignorePatterns: string[];
   matchesGitignore(relativePath: string): boolean;
   matchesCursorignore(relativePath: string): boolean;
+  matchesGeminiignore(relativePath: string): boolean;
+  matchesAiderignore(relativePath: string): boolean;
   /** Whether a path appears excluded for Cursor agent/indexing purposes. */
   isExcludedForCursor(relativePath: string): boolean;
+  /** Gemini CLI respects .geminiignore and .gitignore. */
+  isExcludedForGemini(relativePath: string): boolean;
+  /** Aider respects .aiderignore and typically .gitignore. */
+  isExcludedForAider(relativePath: string): boolean;
 }
 
 function normalizePattern(pattern: string): string | null {
@@ -68,7 +76,6 @@ export function matchIgnorePattern(relativePath: string, pattern: string): boole
   if (pat.endsWith("/")) {
     const dir = pat.slice(0, -1);
     if (!dir.includes("/")) {
-      // `build/` matches build at any directory level (gitignore semantics)
       matched =
         pathNorm === dir ||
         pathNorm.endsWith(`/${dir}`) ||
@@ -132,18 +139,30 @@ const CURSOR_DEFAULT_ENV_PATTERNS = [".env", ".env.*", "**/.env", "**/.env.*"];
 export function createIgnoreIndex(options: {
   gitignorePatterns: string[];
   cursorignorePatterns: string[];
+  geminiignorePatterns?: string[];
+  aiderignorePatterns?: string[];
 }): IgnoreIndex {
   const gitignorePatterns = options.gitignorePatterns;
   const cursorignorePatterns = options.cursorignorePatterns;
+  const geminiignorePatterns = options.geminiignorePatterns ?? [];
+  const aiderignorePatterns = options.aiderignorePatterns ?? [];
 
   return {
     gitignorePatterns,
     cursorignorePatterns,
+    geminiignorePatterns,
+    aiderignorePatterns,
     matchesGitignore(relativePath: string): boolean {
       return pathMatchesAny(relativePath, gitignorePatterns);
     },
     matchesCursorignore(relativePath: string): boolean {
       return pathMatchesAny(relativePath, cursorignorePatterns);
+    },
+    matchesGeminiignore(relativePath: string): boolean {
+      return pathMatchesAny(relativePath, geminiignorePatterns);
+    },
+    matchesAiderignore(relativePath: string): boolean {
+      return pathMatchesAny(relativePath, aiderignorePatterns);
     },
     isExcludedForCursor(relativePath: string): boolean {
       if (pathMatchesAny(relativePath, cursorignorePatterns)) {
@@ -153,6 +172,18 @@ export function createIgnoreIndex(options: {
         return true;
       }
       return pathMatchesAny(relativePath, CURSOR_DEFAULT_ENV_PATTERNS);
+    },
+    isExcludedForGemini(relativePath: string): boolean {
+      if (pathMatchesAny(relativePath, geminiignorePatterns)) {
+        return true;
+      }
+      return pathMatchesAny(relativePath, gitignorePatterns);
+    },
+    isExcludedForAider(relativePath: string): boolean {
+      if (pathMatchesAny(relativePath, aiderignorePatterns)) {
+        return true;
+      }
+      return pathMatchesAny(relativePath, gitignorePatterns);
     },
   };
 }

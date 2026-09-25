@@ -15,7 +15,49 @@ export interface TerminalReportOptions {
 const DEFAULT_FINDING_LIMIT = 12;
 
 const LIMITED_ANALYSIS_NOTE =
-  "No supported coding-agent configuration detected; agent-specific security exposure checks are limited.";
+  "Agent-specific exposure checks are limited (no supported agent config); repository hygiene still applied.";
+
+/** Agents with an implemented Safe Fix writer (detect-only agents are excluded). */
+const SAFE_FIX_AGENT_IDS = new Set<AgentId>([
+  "cursor",
+  "claude-code",
+  "codex",
+  "gemini-cli",
+  "aider",
+]);
+
+function renderAgentCoverageSummary(result: ScanResult): string[] {
+  const configured = result.agents.filter((a) => a.configured);
+  const detectedOnly = result.agents.filter((a) => a.detected && !a.configured);
+  const withFix = configured.filter((a) => SAFE_FIX_AGENT_IDS.has(a.id));
+  const detectOnlyConfigured = configured.filter((a) => !SAFE_FIX_AGENT_IDS.has(a.id));
+
+  const lines: string[] = [];
+  lines.push("");
+  if (result.agentSecurityAnalysis === "limited") {
+    lines.push(
+      colors.dim(
+        "  Coverage: 0 configured · universal hygiene still runs (limited agent analysis)",
+      ),
+    );
+    return lines;
+  }
+
+  const parts: string[] = [`${configured.length} configured`];
+  if (detectedOnly.length > 0) {
+    parts.push(`${detectedOnly.length} detected-only`);
+  }
+  if (withFix.length > 0) {
+    parts.push(`Safe Fix: ${withFix.map((a) => a.displayName).join(", ")}`);
+  }
+  if (detectOnlyConfigured.length > 0) {
+    parts.push(
+      `detect-only (no Safe Fix writer): ${detectOnlyConfigured.map((a) => a.displayName).join(", ")}`,
+    );
+  }
+  lines.push(colors.dim(`  Coverage: ${parts.join(" · ")}`));
+  return lines;
+}
 
 function groupFindings(findings: Finding[]): Record<Severity, Finding[]> {
   return {
@@ -197,6 +239,7 @@ export function renderTerminalReport(
       }
     }
   }
+  lines.push(...renderAgentCoverageSummary(result));
   lines.push("");
 
   const grouped = groupFindings(result.findings);
@@ -214,15 +257,19 @@ export function renderTerminalReport(
   if (total === 0) {
     if (limited) {
       lines.push(
-        `  ${symbolWarn()} Nothing to audit yet — no Cursor, Claude Code, or Codex config found`,
+        `  ${symbolOk()} No repository-hygiene findings — agent readiness not scored (no supported agent config)`,
       );
       lines.push("");
       lines.push(
         colors.dim(
-          "  Next: add project agent config (for example `.cursor/`, `CLAUDE.md` / `.claude/`, or `AGENTS.md`),",
+          "  Optional next: add project agent config (`.cursor/`, `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md`, `.windsurf/rules/`, `GEMINI.md`, or `.aider.conf.yml`)",
         ),
       );
-      lines.push(colors.dim("  then re-run `agentdoctor` in this repository."));
+      lines.push(
+        colors.dim(
+          "  so agent exposure checks run fully. CLI, Action, and Project Brain MCP still work without an agent.",
+        ),
+      );
     } else {
       lines.push(`  ${symbolOk()} No findings`);
     }
@@ -279,7 +326,7 @@ export function renderTerminalReport(
   if (result.scoringAvailable && result.scores) {
     if (limited) {
       lines.push(
-        `  Readiness: n/a — configure Cursor, Claude Code, or Codex before treating scores as agent readiness`,
+        `  Readiness: n/a — configure a supported agent (Cursor, Claude Code, Codex, Copilot, Windsurf, Gemini CLI, or Aider) before treating scores as agent readiness`,
       );
       lines.push(
         colors.dim(

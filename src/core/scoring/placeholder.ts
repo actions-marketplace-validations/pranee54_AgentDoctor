@@ -3,7 +3,7 @@ import type { Scores } from "../../types/index.js";
 /**
  * Historical filesScanned-based stub. Kept for unit tests that document the
  * pre-v1 placeholder behavior. Production scans use computeReadinessScores
- * (docs/scoring.md) — do not call this from scan().
+ * (docs/reference/scoring.md) — do not call this from scan().
  */
 export function computePlaceholderScores(filesScanned: number): Scores {
   const base = 72;
@@ -24,6 +24,10 @@ export function computePlaceholderScores(filesScanned: number): Scores {
       cursor: clamp(overall - 5),
       "claude-code": clamp(overall - 8),
       codex: clamp(overall - 6),
+      copilot: clamp(overall - 7),
+      windsurf: clamp(overall - 6),
+      "gemini-cli": clamp(overall - 5),
+      aider: clamp(overall - 7),
     },
   };
 }

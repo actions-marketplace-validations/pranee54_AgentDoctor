@@ -1,5 +1,5 @@
 name: AgentDoctor Safety
-description: Audit project-level coding-agent configuration and enforce CI policy gates.
+description: Audit coding-agent config, enforce CI gates, and surface AgentDoctor Safety reports (part of AgentDoctor 2.0).
 author: AgentDoctor Contributors
 
 branding:
@@ -16,7 +16,7 @@ inputs:
       Published AgentDoctor npm version or dist-tag (latest|beta), or `workspace`
       to run the checked-out repository's built CLI at dist/cli/index.js.
     required: false
-    default: 1.0.0
+    default: 2.1.0
   output-file:
     description: Repository-relative path for the JSON report.
     required: false

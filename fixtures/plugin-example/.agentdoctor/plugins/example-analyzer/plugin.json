@@ -1,0 +1,9 @@
+{
+  "id": "example-analyzer",
+  "name": "Example Analyzer Plugin",
+  "version": "1.0.0",
+  "apiVersion": "2.0",
+  "capabilities": ["analyzer"],
+  "requestedPermissions": ["none"],
+  "entry": "hooks.json"
+}

@@ -9,6 +9,12 @@ const INSTRUCTION_KINDS = new Set([
   "claude-md",
   "claude-local-md",
   "claude-rule-md",
+  "copilot-instructions",
+  "copilot-path-instructions",
+  "windsurf-rule-md",
+  "windsurf-legacy-rules",
+  "gemini-md",
+  "aider-conventions",
 ]);
 
 export const largeInstructionFileRule: RuleDefinition = {

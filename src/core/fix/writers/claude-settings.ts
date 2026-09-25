@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { atomicWriteTextFile, readTextFile } from "../../../utils/fs.js";
 import { claudeReadDenyRule } from "../../rules/claude-deny.js";
+import { resolveSafeFixWritePath } from "../safe-target.js";
 import type { FixAction } from "../types.js";
 
 const MAX_BYTES = 512 * 1024;
@@ -116,7 +117,8 @@ export async function readClaudeSettings(root: string): Promise<string | null> {
 }
 
 export async function writeClaudeSettings(root: string, content: string): Promise<void> {
-  await atomicWriteTextFile(path.join(root, SETTINGS_RELATIVE), content);
+  const { absolutePath } = await resolveSafeFixWritePath(root, SETTINGS_RELATIVE);
+  await atomicWriteTextFile(absolutePath, content);
 }
 
 function parseDenyList(currentContent: string | null): string[] {

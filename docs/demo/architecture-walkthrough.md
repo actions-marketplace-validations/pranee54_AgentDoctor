@@ -91,4 +91,4 @@ Tools (exact): `brain_overview`, `brain_query`, `brain_explain`, `brain_trace`, 
 
 ## Further reading
 
-[project-brain.md](../project-brain.md) · [mcp/brain-mcp.md](../mcp/brain-mcp.md) · [../ROADMAP.md](../../ROADMAP.md)
+[project-brain.md](../features/project-brain.md) · [mcp/brain-mcp.md](../mcp/brain-mcp.md) · [../ROADMAP.md](../../ROADMAP.md)

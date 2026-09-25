@@ -1,16 +1,18 @@
 # Contributing
 
-Thanks for helping improve AgentDoctor — evidence-backed Project Brain for AI coding agents, plus Safety Scan → Fix → Verify.
+Thanks for helping improve **AgentDoctor** — engineering intelligence and safety for AI coding agents.
 
 ## Project overview
 
-| Track         | What it is                                                                 |
-| ------------- | -------------------------------------------------------------------------- |
-| Safety        | Deterministic agent-config audit (Cursor / Claude Code / Codex)            |
-| Project Brain | Structured understanding: claims, evidence, confidence, UNKNOWN, snapshots |
-| MCP           | STDIO bridge: `agentdoctor brain-mcp --root <abs>` — ten `brain_*` tools   |
+| Layer                   | What it is                                                         |
+| ----------------------- | ------------------------------------------------------------------ |
+| Repository intelligence | AST graph, Git hotspots, change / test / refactor impact           |
+| Engineering knowledge   | Project Brain, governed knowledge, provenance                      |
+| Safety                  | Deterministic agent-config Scan → Safe Fix → Verify → policy gates |
+| Agent interfaces        | Brain MCP, combined MCP, adapters, CLI, local dashboard            |
+| Verification            | `npm run verify`, packed smoke, CI Action                          |
 
-Read [docs/why-agentdoctor.md](docs/why-agentdoctor.md) and [ROADMAP.md](ROADMAP.md) before proposing large architecture changes.
+Canonical product docs: [docs/2.0/README.md](docs/2.0/README.md) · [README.md](README.md) · [ROADMAP.md](ROADMAP.md)
 
 ## Development setup
 
@@ -21,9 +23,10 @@ git clone https://github.com/pranee54/AgentDoctor.git
 cd AgentDoctor
 npm install
 npm run build
+npm run verify
 ```
 
-## Common commands (from `package.json`)
+## Common commands
 
 ```bash
 npm run typecheck
@@ -39,7 +42,7 @@ npm run test:mcp
 npm run verify:mcp
 npm run validate:project-brain
 npm run benchmark:project-brain
-npm run verify:project-brain   # understanding + validate + benchmark
+npm run verify:project-brain
 npm run validate:mcp-agent
 ```
 
@@ -49,25 +52,28 @@ Local Safety smoke:
 node dist/cli/index.js ./fixtures/clean-configured-project
 ```
 
-Local Brain MCP (after build):
+Local Brain MCP / combined MCP (after build):
 
 ```bash
 node dist/cli/index.js brain-mcp --root /ABSOLUTE/PATH/TO/PROJECT
+node dist/cli/index.js mcp --root /ABSOLUTE/PATH/TO/PROJECT
 ```
 
 ## Documentation changes
 
-- Keep claims aligned with implemented behavior
-- Prefer links to [docs/quickstart.md](docs/quickstart.md), [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md), [docs/project-brain.md](docs/project-brain.md)
-- Update [docs/rules.md](docs/rules.md) when Safety rules change
-- Do not invent benchmarks, user counts, or “zero hallucination” claims
+- Keep claims aligned with implemented behavior and [docs/2.0/overview/capabilities.md](docs/2.0/overview/capabilities.md)
+- Prefer **SUPPORTED / PARTIAL / EXPERIMENTAL / NOT YET SUPPORTED** — never invent star ratings or “enterprise-ready”
+- Prefer links to [docs/2.0/](docs/2.0/), [docs/guides/quickstart.md](docs/guides/quickstart.md), [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md)
+- Update [docs/reference/rules.md](docs/reference/rules.md) when Safety rules change
+- Put historical material under [docs/archive/](docs/archive/)
 
 ## Proposing architecture changes
 
 1. Open an issue first (problem statement + alternatives)
-2. Check [ROADMAP.md](ROADMAP.md) — mark future ideas as planned/exploratory
+2. Check [ROADMAP.md](ROADMAP.md) — mark future ideas as planned / exploratory
 3. Do not silently expand Brain into RAG, chat memory, or vulnerability scanning
 4. Preserve UNKNOWN semantics and provenance envelopes
+5. Do not implement Change Proof / multi-agent orchestration without an explicit design decision
 
 ## Reporting bugs
 
@@ -78,30 +84,16 @@ node dist/cli/index.js brain-mcp --root /ABSOLUTE/PATH/TO/PROJECT
 
 ## Proposing new Brain capabilities
 
-Use [feature request](.github/ISSUE_TEMPLATE/feature_request.md) and say whether the idea is:
+- Prefer evidence-backed claims and abstention over invention
+- Keep MCP tool names stable unless a major version explicitly breaks them
+- Document limitations next to any new surface
 
-- fixture / test coverage
-- documentation
-- deterministic discovery improvement
-- or a **roadmap proposal** (not implemented)
+## Code style
 
-## Do NOT commit
+- TypeScript, ESM, existing ESLint / Prettier configs
+- Prefer small, reviewable PRs with tests for behavior changes
+- Match surrounding code; avoid drive-by refactors
 
-- `.agentdoctor/` (local Brain store)
-- `.cursor/mcp.json` or machine-specific agent configs
-- `validation/mcp-agent/results.json` / generated validation reports
-- `fixtures/excepta/mobile/**` generated Dart/Android artifacts
-- credentials, `.env` with secrets, private keys
-- `PROJECT_AUDIT.txt`, `RELEASE_CHECKLIST.txt` (local owner notes)
+## License
 
-## Pull requests
-
-1. One concern per PR
-2. Tests for behavior changes
-3. Docs when user-facing behavior changes
-4. `npm run verify` (and Brain/MCP gates when those areas change)
-5. Fill the PR template
-
-Starter ideas: [docs/community/good-first-issues.md](docs/community/good-first-issues.md) · [docs/good-first-issues.md](docs/good-first-issues.md)
-
-Be respectful: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+By contributing, you agree that your contributions are licensed under the MIT License (see [LICENSE](LICENSE)).

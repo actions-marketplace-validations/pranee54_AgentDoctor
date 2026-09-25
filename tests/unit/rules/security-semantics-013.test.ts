@@ -34,17 +34,18 @@ describe("security semantics: agents vs repository risk", () => {
     const result = await scan({ cwd: path.join(fixturesRoot, "clean-project") });
     expect(result.agentSecurityAnalysis).toBe("limited");
     expect(result.findings.filter((f) => f.category === "security")).toHaveLength(0);
-    expect(result.diagnostics.warnings.some((w) => w.includes("agent-specific security"))).toBe(
+    expect(result.diagnostics.warnings.some((w) => w.includes("Agent-specific exposure"))).toBe(
       true,
     );
 
     const terminal = renderTerminalReport(result);
-    expect(terminal).toContain("agent-specific security exposure checks are limited");
-    expect(terminal).toContain("Nothing to audit yet");
-    expect(terminal).toContain("re-run `agentdoctor`");
+    expect(terminal).toContain("Agent-specific exposure checks are limited");
+    expect(terminal).toContain("repository hygiene still applied");
+    expect(terminal).toContain("No repository-hygiene findings");
+    expect(terminal).toContain("Optional next: add project agent config");
     expect(terminal).not.toContain("No agent-configuration findings");
     expect(terminal).toContain("Readiness: n/a");
-    expect(terminal).not.toContain("No findings");
+    expect(terminal).not.toMatch(/\n\s+✓ No findings\n/);
     expect(terminal).not.toMatch(/Readiness: \d+\/100/);
 
     const json = JSON.parse(renderJsonReport(result));
@@ -62,7 +63,7 @@ describe("security semantics: agents vs repository risk", () => {
     expect(JSON.stringify(result)).not.toContain("FAKE_TEST_CREDENTIAL_DO_NOT_USE");
 
     const terminal = renderTerminalReport(result);
-    expect(terminal).toContain("agent-specific security exposure checks are limited");
+    expect(terminal).toContain("Agent-specific exposure checks are limited");
     expect(terminal).toContain("Sensitive environment file present in repository");
   });
 

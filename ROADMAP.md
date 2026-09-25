@@ -1,13 +1,14 @@
 # AgentDoctor Roadmap
 
-AgentDoctor is evolving from repository analysis into an **evidence-backed context layer for AI coding agents**.
+AgentDoctor provides **engineering intelligence and safety for AI coding agents** — repository understanding, knowledge governance, safety controls, MCP interfaces, and verification evidence.
 
 ```text
-Today (shipped)
-Repository → Project Understanding → Project Brain → MCP → AI Agent
+Today (shipped — 2.1.0 optional Project AI + 2.0.1 assurance)
+Repository → Understand → Analyze → Govern → Change → Verify → Evidence
+(+ optional: Project Chat / agent tools / student BUILD_WITH_ME)
 
-Direction (not shipped)
-Project Brain → Agent Context → Agent Reliability → Agent-Aware Development Infrastructure
+Direction (not fully shipped)
+Full Change Proof UX → richer student UI → Team-scale intelligence
 ```
 
 Status legend:
@@ -22,22 +23,24 @@ This document is milestone-based. It does **not** promise calendar dates.
 
 ## Priority
 
-| Priority | Direction                                                                         | Status               |
-| -------- | --------------------------------------------------------------------------------- | -------------------- |
-| P0       | Safety Scan → Fix → Verify → CI                                                   | 🟢 Shipped (`1.0.x`) |
-| P0       | Project Brain stability (claims, evidence, confidence, UNKNOWN, snapshots/deltas) | 🟢 Shipped (`1.1.0`) |
-| P0       | Brain MCP reliability (STDIO, 10 tools, provenance, security controls)            | 🟢 Shipped (`1.1.0`) |
-| P0       | Developer adoption (quickstart, demos, Brain-quality feedback loop)               | 🟡 Next (process)    |
-| P1       | Agent Context layer (task-relevant context packaging)                             | 🟡 Planned           |
-| P1       | Context freshness / stale-context detection                                       | 🟡 Planned           |
-| P1       | Change-aware agent context (Brain Delta evolution)                                | 🟡 Planned           |
-| P1       | Agent reliability surfaces (pre/post-change risk, invalidation)                   | 🟡 Planned           |
-| P2       | CI / pull-request Brain analysis                                                  | 🔵 Exploratory       |
-| P2       | Team-scale Project Intelligence                                                   | 🔵 Exploratory       |
-| P3       | Additional MCP transports beyond STDIO                                            | 🔵 Exploratory       |
-| P3       | Optional telemetry / key-gated AI-assisted analysis                               | 🔵 Exploratory       |
+| Priority | Direction                                                           | Status                |
+| -------- | ------------------------------------------------------------------- | --------------------- |
+| P0       | Safety Scan → Fix → Verify → CI                                     | 🟢 Shipped (`1.0.x`+) |
+| P0       | Project Brain + Brain MCP                                           | 🟢 Shipped (`1.1.0`+) |
+| P0       | AgentDoctor 2.0 (intelligence, combined MCP, knowledge, Action pin) | 🟢 Shipped (`2.0.0`)  |
+| P0       | AgentDoctor 2.0.1 change assurance + evidence bundles               | 🟡 Partial (`2.0.1`)  |
+| P0       | Developer adoption (docs clarity, honest capability labels)         | 🟡 Next (process)     |
+| P1       | Change Proof (full product vision beyond assessment + evidence)     | 🟡 Planned            |
+| P1       | Agent Context layer (task-relevant context packaging)               | 🟡 Planned            |
+| P1       | Context freshness / stale-context detection                         | 🟡 Planned            |
+| P1       | Change-aware agent context (Brain Delta evolution)                  | 🟡 Planned            |
+| P1       | Agent reliability surfaces (pre/post-change risk, invalidation)     | 🟡 Planned            |
+| P2       | CI / pull-request Brain analysis                                    | 🔵 Exploratory        |
+| P2       | Team-scale Project Intelligence                                     | 🔵 Exploratory        |
+| P3       | Additional MCP transports beyond STDIO                              | 🔵 Exploratory        |
+| P3       | Optional telemetry / key-gated AI-assisted analysis                 | 🔵 Exploratory        |
 
-Safety precision work continues in parallel: prefer corpus-backed, measurable improvements over large architectural rewrites ([docs/scoring.md](docs/scoring.md), [docs/compatibility.md](docs/compatibility.md)).
+Safety precision work continues in parallel: prefer corpus-backed, measurable improvements over large architectural rewrites ([docs/reference/scoring.md](docs/reference/scoring.md), [docs/reference/compatibility.md](docs/reference/compatibility.md)).
 
 ---
 
@@ -52,9 +55,9 @@ First production Safety contract (`1.0.0`): audit project-level AI coding agent 
 - Safe context Fix: Cursor `.cursorignore`, Claude Code Read deny, Codex filesystem deny
 - Shared policy gates: `--min-score`, `--fail-on-severity`, `--fail-on-rule`, `--fail-on-new`
 - GitHub Action with JSON report artifact; `version: workspace` for local `dist/cli`
-- Readiness scoring (0–100) — [docs/scoring.md](docs/scoring.md)
+- Readiness scoring (0–100) — [docs/reference/scoring.md](docs/reference/scoring.md)
 - Cross-platform CI (including Windows) and Windows-safe Fix overwrite
-- Compatibility promises — [docs/compatibility.md](docs/compatibility.md)
+- Compatibility promises — [docs/reference/compatibility.md](docs/reference/compatibility.md)
 
 Brain risk in later releases is **change-danger analysis**, not a replacement for Safety or a vulnerability scanner.
 
@@ -96,7 +99,49 @@ AgentDoctor
 - Real-agent harness (`validation/mcp-agent`) — Cursor MCP tool discovery exercised; authenticated LLM Q1–Q7 grading may remain environment-blocked
 - Cross-platform CI hardening during the 1.1.0 release train
 
-Docs: [docs/project-brain.md](docs/project-brain.md) · [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md) · [docs/release-notes-v1.1.0.md](docs/release-notes-v1.1.0.md)
+Docs: [docs/features/project-brain.md](docs/features/project-brain.md) · [docs/mcp/brain-mcp.md](docs/mcp/brain-mcp.md) · [docs/release-notes/v1.1.0.md](docs/release-notes/v1.1.0.md)
+
+---
+
+## 2.0.0 — Engineering intelligence release — 🟢 Shipped
+
+Published as [`@praneeth_54/agentdoctor@2.0.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor).
+
+Adds repository intelligence (AST graph, Git hotspots, impact), Repository Brain proposals, governed knowledge, combined MCP, local dashboard / API surfaces, and Action default pin `2.0.0` — while preserving Safety CLI contracts and Brain MCP tool names.
+
+Canonical docs: [docs/2.0/README.md](docs/2.0/README.md) · readiness: [docs/2.0/overview/readiness-matrix.md](docs/2.0/overview/readiness-matrix.md)
+
+---
+
+## 2.1.0 — Optional Project AI Agent — ✅ Released
+
+Published: [`@praneeth_54/agentdoctor@2.1.0`](https://www.npmjs.com/package/@praneeth_54/agentdoctor).
+
+Adds optional Project Chat, coding agent tools (path-safe, approval-gated), student BUILD_WITH_ME, agent MCP subset, and dashboard ask-only chat — on top of the 2.0.1 assurance substrate. AI remains opt-in. Correctness is never claimed.
+
+Docs: [docs/RELEASE_2_1_0.md](docs/RELEASE_2_1_0.md)
+
+---
+
+## 2.0.1 — Change assurance hardening — ✅ Released
+
+Published: [`@praneeth_54/agentdoctor@2.0.1`](https://www.npmjs.com/package/@praneeth_54/agentdoctor).
+
+Ships **change assurance** (`change analyze` / `change verify`) and **evidence bundles** (inspect + hash verify). Assembles existing git/graph/C4/knowledge/policy/secrets/test-impact signals into an explainable assessment. Status `verified` is reserved for successful evidence hash checks only.
+
+Still **not** full Change Proof product vision: no coverage-backed selection as ground truth, no agent-request binding UX, no SSO, no claim of correctness.
+
+Docs: [docs/2.0.1/README.md](docs/2.0.1/README.md)
+
+---
+
+## Change Proof — 🟡 Partially shipped in 2.0.1 / remainder planned
+
+**Partial (2.0.1):** change assessment + durable evidence under `.agentdoctor/evidence/<id>/` with SHA-256 manifests.
+
+**Still planned:** richer Change Proof records (agent/request binding, coverage-backed proof UX, team-scale workflows). Do not document those as current features.
+
+See README “Change assurance” and [docs/2.0.1/limitations.md](docs/2.0.1/limitations.md).
 
 ---
 
@@ -106,7 +151,7 @@ Docs: [docs/project-brain.md](docs/project-brain.md) · [docs/mcp/brain-mcp.md](
 
 In-repo materials (documentation only):
 
-- [docs/quickstart.md](docs/quickstart.md)
+- [docs/guides/quickstart.md](docs/guides/quickstart.md)
 - [docs/demo/first-5-minutes.md](docs/demo/first-5-minutes.md)
 - [docs/community/good-first-issues.md](docs/community/good-first-issues.md)
 - [docs/community/first-10-users.md](docs/community/first-10-users.md)
@@ -307,7 +352,7 @@ Longer-term possibilities (none shipped as enterprise product):
 
 Still relevant from the prior roadmap and still valid:
 
-- **🟡 Planned:** scoring follow-ups deferred in [docs/scoring.md](docs/scoring.md)
+- **🟡 Planned:** scoring follow-ups deferred in [docs/reference/scoring.md](docs/reference/scoring.md)
 - **🟡 Planned:** additional agent adapters via the existing registry
 - **🟡 Planned:** richer MCP **configuration** analysis without executing servers (Safety path)
 - **🔵 Exploratory:** badge generation from CI artifacts; optional opt-in telemetry; optional clearly separated key-gated AI-assisted analysis; hosted badge service (separate product decision)

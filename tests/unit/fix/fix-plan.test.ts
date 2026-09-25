@@ -318,7 +318,195 @@ describe("fix plan + cursorignore writer", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it("skips Copilot Safe Fix (no official deny writer) without inventing actions", async () => {
+    const root = await makeCopilotFixSandbox();
+    try {
+      const result = await scan({ cwd: root });
+      expect(result.agentSecurityAnalysis).toBe("full");
+      expect(result.agents.some((a) => a.id === "copilot" && a.configured)).toBe(true);
+      expect(
+        result.findings.some(
+          (f) =>
+            f.ruleId === "context/generated-directory" &&
+            f.evidence?.path === "build" &&
+            f.affectedAgents.includes("copilot"),
+        ),
+      ).toBe(true);
+
+      const plan = await buildFixPlan(result);
+      expect(plan.actions).toHaveLength(0);
+      expect(
+        plan.skipped.some(
+          (s) =>
+            s.ruleId === "context/generated-directory" &&
+            s.reason.includes("no official project deny/ignore Fix writer"),
+        ),
+      ).toBe(true);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("proposes .geminiignore for safe context findings when Gemini CLI is detected", async () => {
+    const root = await makeGeminiFixSandbox();
+    try {
+      const result = await scan({ cwd: root });
+      expect(
+        result.findings.some(
+          (f) =>
+            f.ruleId === "context/generated-directory" &&
+            f.evidence?.path === "build" &&
+            f.affectedAgents.includes("gemini-cli"),
+        ),
+      ).toBe(true);
+
+      const plan = await buildFixPlan(result);
+      expect(
+        plan.actions.some(
+          (a) =>
+            a.agent === "gemini-cli" &&
+            a.targetRelativePath === ".geminiignore" &&
+            a.pattern === "build/",
+        ),
+      ).toBe(true);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("apply writes .geminiignore and clears generated-directory for Gemini CLI", async () => {
+    const root = await makeGeminiFixSandbox();
+    try {
+      const before = await scan({ cwd: root });
+      const plan = await buildFixPlan(before);
+      const applyResult = await applyFixPlan(plan, { dryRun: false });
+      expect(applyResult.writtenFiles).toEqual([".geminiignore"]);
+      const written = await fs.readFile(path.join(root, ".geminiignore"), "utf8");
+      expect(written).toContain("build/");
+
+      const after = await scan({ cwd: root });
+      expect(
+        after.findings.some(
+          (f) =>
+            f.ruleId === "context/generated-directory" &&
+            f.evidence?.path === "build" &&
+            f.affectedAgents.includes("gemini-cli"),
+        ),
+      ).toBe(false);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("proposes and applies .aiderignore for Aider", async () => {
+    const root = await makeAiderFixSandbox();
+    try {
+      const before = await scan({ cwd: root });
+      expect(
+        before.findings.some(
+          (f) => f.ruleId === "context/generated-directory" && f.affectedAgents.includes("aider"),
+        ),
+      ).toBe(true);
+      const plan = await buildFixPlan(before);
+      expect(
+        plan.actions.some((a) => a.agent === "aider" && a.targetRelativePath === ".aiderignore"),
+      ).toBe(true);
+      await applyFixPlan(plan, { dryRun: false });
+      const after = await scan({ cwd: root });
+      expect(
+        after.findings.some(
+          (f) => f.ruleId === "context/generated-directory" && f.affectedAgents.includes("aider"),
+        ),
+      ).toBe(false);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("skips Windsurf Safe Fix without inventing actions", async () => {
+    const root = await makeWindsurfFixSandbox();
+    try {
+      const result = await scan({ cwd: root });
+      expect(result.agents.some((a) => a.id === "windsurf" && a.configured)).toBe(true);
+      const plan = await buildFixPlan(result);
+      expect(plan.actions.every((a) => a.agent !== "windsurf")).toBe(true);
+      expect(
+        plan.skipped.some((s) =>
+          s.reason.includes("Windsurf has no official project deny/ignore Fix writer"),
+        ),
+      ).toBe(true);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });
+
+async function makeGeminiFixSandbox(): Promise<string> {
+  await fs.mkdir(scratchRoot, { recursive: true });
+  const root = await fs.mkdtemp(path.join(scratchRoot, "fix-gemini-"));
+  await fs.writeFile(
+    path.join(root, "package.json"),
+    JSON.stringify({ name: "fix-gemini-sandbox", private: true }),
+    "utf8",
+  );
+  await fs.writeFile(path.join(root, "GEMINI.md"), "# Gemini\n\nPrefer TypeScript.\n", "utf8");
+  await fs.mkdir(path.join(root, "build"), { recursive: true });
+  await fs.writeFile(path.join(root, "build", "out.txt"), "generated\n", "utf8");
+  return root;
+}
+
+async function makeAiderFixSandbox(): Promise<string> {
+  await fs.mkdir(scratchRoot, { recursive: true });
+  const root = await fs.mkdtemp(path.join(scratchRoot, "fix-aider-"));
+  await fs.writeFile(
+    path.join(root, "package.json"),
+    JSON.stringify({ name: "fix-aider-sandbox", private: true }),
+    "utf8",
+  );
+  await fs.writeFile(path.join(root, ".aider.conf.yml"), "read: CONVENTIONS.md\n", "utf8");
+  await fs.mkdir(path.join(root, "build"), { recursive: true });
+  await fs.writeFile(path.join(root, "build", "out.txt"), "generated\n", "utf8");
+  return root;
+}
+
+async function makeWindsurfFixSandbox(): Promise<string> {
+  await fs.mkdir(scratchRoot, { recursive: true });
+  const root = await fs.mkdtemp(path.join(scratchRoot, "fix-windsurf-"));
+  await fs.writeFile(
+    path.join(root, "package.json"),
+    JSON.stringify({ name: "fix-windsurf-sandbox", private: true }),
+    "utf8",
+  );
+  await fs.mkdir(path.join(root, ".windsurf", "rules"), { recursive: true });
+  await fs.writeFile(
+    path.join(root, ".windsurf", "rules", "coding.md"),
+    "# Rules\n\nPrefer TypeScript.\n",
+    "utf8",
+  );
+  await fs.mkdir(path.join(root, "build"), { recursive: true });
+  await fs.writeFile(path.join(root, "build", "out.txt"), "generated\n", "utf8");
+  return root;
+}
+
+async function makeCopilotFixSandbox(): Promise<string> {
+  await fs.mkdir(scratchRoot, { recursive: true });
+  const root = await fs.mkdtemp(path.join(scratchRoot, "fix-copilot-"));
+  await fs.writeFile(
+    path.join(root, "package.json"),
+    JSON.stringify({ name: "fix-copilot-sandbox", private: true }),
+    "utf8",
+  );
+  await fs.mkdir(path.join(root, ".github"), { recursive: true });
+  await fs.writeFile(
+    path.join(root, ".github", "copilot-instructions.md"),
+    "# Copilot\n\nPrefer TypeScript.\n",
+    "utf8",
+  );
+  await fs.mkdir(path.join(root, "build"), { recursive: true });
+  await fs.writeFile(path.join(root, "build", "out.txt"), "generated\n", "utf8");
+  return root;
+}
 
 async function makeClaudeFixSandbox(): Promise<string> {
   await fs.mkdir(scratchRoot, { recursive: true });

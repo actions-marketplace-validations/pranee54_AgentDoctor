@@ -53,7 +53,8 @@ export type PackageManagerId =
 export type MonorepoToolId =
   "npm-workspaces" | "pnpm-workspaces" | "turborepo" | "nx" | "multi-project" | "none";
 
-export type AgentId = "cursor" | "claude-code" | "codex";
+export type AgentId =
+  "cursor" | "claude-code" | "codex" | "copilot" | "windsurf" | "gemini-cli" | "aider";
 
 export interface DiscoveredFile {
   /** Absolute path */
@@ -138,6 +139,10 @@ export interface AgentScores {
   cursor: number;
   "claude-code": number;
   codex: number;
+  copilot: number;
+  windsurf: number;
+  "gemini-cli": number;
+  aider: number;
 }
 
 export interface Scores {

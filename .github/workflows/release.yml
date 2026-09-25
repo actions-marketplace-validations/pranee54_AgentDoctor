@@ -58,9 +58,12 @@ jobs:
           TAG="${{ steps.tag.outputs.name }}"
           # Strip leading v for filename match: v0.1.0-beta -> 0.1.0-beta
           VER="${TAG#v}"
-          CANDIDATE="docs/release-notes-v${VER}.md"
+          CANDIDATE="docs/release-notes/v${VER}.md"
+          LEGACY="docs/release-notes-v${VER}.md"
           if [ -f "$CANDIDATE" ]; then
             echo "path=$CANDIDATE" >> "$GITHUB_OUTPUT"
+          elif [ -f "$LEGACY" ]; then
+            echo "path=$LEGACY" >> "$GITHUB_OUTPUT"
           else
             echo "path=" >> "$GITHUB_OUTPUT"
           fi

@@ -22,7 +22,7 @@ Honest limits: Brain risk is change-danger, not a CVE scanner. Authenticated LLM
 
 **Ask:** Run it on a repository you know well. If the Brain gets something wrong, I want to know.
 Repo: https://github.com/pranee54/AgentDoctor
-Quickstart: docs/quickstart.md
+Quickstart: docs/guides/quickstart.md
 
 ## B) X / Twitter
 

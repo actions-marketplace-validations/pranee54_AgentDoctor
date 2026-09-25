@@ -8,6 +8,13 @@ const EMPTYABLE_KINDS = new Set([
   "claude-md",
   "claude-local-md",
   "claude-rule-md",
+  "copilot-instructions",
+  "copilot-path-instructions",
+  "windsurf-rule-md",
+  "windsurf-legacy-rules",
+  "gemini-md",
+  "aider-conventions",
+  "aider-conf",
 ]);
 
 export const emptyInstructionsRule: RuleDefinition = {

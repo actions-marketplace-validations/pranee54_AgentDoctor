@@ -7,6 +7,8 @@ export const FIX_PATH_ALLOWLIST = [
   ".cursorignore",
   ".claude/settings.json",
   ".codex/config.toml",
+  ".geminiignore",
+  ".aiderignore",
 ] as const;
 
 export type FixAllowlistedPath = (typeof FIX_PATH_ALLOWLIST)[number];
@@ -42,4 +44,15 @@ export interface FixApplyResult {
   writtenFiles: string[];
   /** Relative paths that would be / were written */
   changedFiles: string[];
+  /**
+   * Present when apply stopped after one or more successful writes.
+   * Safe Fix is not transactional across multiple targets.
+   */
+  partial?: boolean;
+  /** Relative path that failed when `partial` is true, or preflight failed. */
+  failedTarget?: string;
+  /** Human-readable failure reason. */
+  error?: string;
+  /** Audit / backup id created before apply (when writes were attempted). */
+  auditId?: string;
 }

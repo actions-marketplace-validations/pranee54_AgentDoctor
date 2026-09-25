@@ -7,10 +7,257 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-09-23
+
+Optional Project AI Agent line on top of 2.0.1 assurance. AI remains **opt-in**.
+Canonical release notes: [docs/RELEASE_2_1_0.md](docs/RELEASE_2_1_0.md).
+Checklist: [docs/RELEASE_CHECKLIST_2_1_0.md](docs/RELEASE_CHECKLIST_2_1_0.md).
+
+#### Project Intelligence
+
+- Project-aware context retrieval (Brain / graph / planContext orchestration).
+- Project Chat CLI (`agentdoctor chat` / `ask`) with evidence-backed answers.
+- Truth labels: `VERIFIED` | `INFERRED` | `UNKNOWN` | `EXTERNAL`.
+
+#### AI Agent
+
+- Provider abstraction (`ModelProvider`): `none` | `mock` | `openai-compatible` | `ollama`.
+- Optional AI architecture: model reasons; AgentDoctor provides context, controls tools, verifies results.
+- Native Anthropic / Gemini SDKs remain **NOT IMPLEMENTED** (fail closed via `none`).
+
+#### Agent Tools
+
+- Read / search tools (path-safe).
+- Create / edit / delete with diffs (approval required).
+- Controlled command and test execution via `runControlledCommand` (`shell=false`).
+- Coding loop: PLAN → APPROVAL → TOOLS → OBSERVE → VERIFY.
+
+#### Safety
+
+- Path safety and symlink-dir escape rejection on writes.
+- Workspace isolation when `WorkspaceModel` is provided; otherwise repo-root binding.
+- Mode `allowWrites` enforcement (LEARN hard-blocks writes).
+- Approval gates (`--approve` / `approvedByHuman`); model cannot self-approve.
+- Dangerous command blocking; prompt-injection data separation (`PROJECT_DATA` / `TOOL_OUTPUT_UNTRUSTED`).
+- Secret redaction (reuses existing redaction infrastructure).
+- Hard agent limits: tool calls, iterations, wall time, files modified, context chars.
+
+#### Verification
+
+- Post-change analysis / evidence / proof / architecture (where applicable).
+- Optional controlled test run (`--run-tests`).
+- Always preserves `ENGINEERING_CORRECTNESS_NOT_CLAIMED`.
+
+#### Student
+
+- `agentdoctor learn` — project explain, viva, docs.
+- Default student experience: **BUILD_WITH_ME** (explain → plan → teach → approve → `runCodingLoop` → verify).
+- Rich interactive student UI remains **PARTIAL**.
+
+#### MCP
+
+- Agent tools: `project_context`, `project_ask`, `code_search`, `file_read`, `file_create`, `file_edit`, `agent_plan`, `change_verify`.
+- No unrestricted shell.
+- `project_ask` fail-closed when provider is `none`.
+- MCP `approved=true` is **trusted-caller input**, not cryptographic human identity; MCP does not carry `AgentMode`.
+
+#### Dashboard
+
+- Project Chat via `POST /api/chat` (ask-only; no file writes).
+- Fail-closed when AI provider resolves to `none` (no silent mock fallback).
+
+#### Known limitations
+
+- Not an OS sandbox / EDR (**EXTERNAL LIMITATION**).
+- Native Anthropic / Gemini SDKs **NOT IMPLEMENTED**.
+- Correctness is never guaranteed.
+- MCP approval is trusted-caller input (not cryptographic human identity); MCP does not carry AgentMode.
+- Rich interactive student UI remains **PARTIAL**.
+
+## [2.0.1] — 2026-09-23
+
+Hardening and change-assurance cut on top of 2.0.0, plus a deepening pass that
+closes controllable PARTIALs with honest EXTERNAL/EXPERIMENTAL gates. Canonical
+docs: [docs/2.0.1/](docs/2.0.1/README.md). Completion map:
+[docs/2.0.1/FINAL_COMPLETION_AUDIT.md](docs/2.0.1/FINAL_COMPLETION_AUDIT.md).
+
+### Added
+
+- Change assurance CLI: `agentdoctor change analyze|verify|explain|diff|status`
+  assemble repository signals into a structured `ChangeAssessment`.
+- Evidence bundles under `.agentdoctor/evidence/<change-id>/` with versioned
+  `manifest.json` and SHA-256 file hashes; `evidence inspect|verify`.
+- Change Proof CLI: `proof build|inspect|explain|verify|export` (integrity +
+  optional engineering checks; `correctnessStatus` always
+  `ENGINEERING_CORRECTNESS_NOT_CLAIMED`).
+- Architecture contract: `architecture init|analyze|check|explain`.
+- Optional coverage-backed test impact (`--coverage`) with explicit
+  `testAttribution` labels (`coverage-map` / `hybrid-heuristic` / `none`).
+- Controlled runner: `run` / `run explain` and `policy check|explain|enforce`
+  (execute only when explicitly allowed).
+- Policy composition (builtin pack + `.agentdoctor/policy.json`).
+- Incremental graph surfaces: `graph build|update|rebuild|status`.
+- Workspace isolation CLI: `workspace create|add|list|status|remove`.
+- Language adapters: Python/PHP toolchain bridges; Go honest unsupported stub;
+  Java/Kotlin/Rust/Dart unsupported stubs.
+- Storage: SQLite (`node:sqlite`) and Postgres (`tryCreatePostgresStorage`) with
+  env/runtime gates.
+- Auth library path: OIDC JWT/JWKS validation + RBAC helpers (browser OAuth
+  redirect remains experimental).
+- Combined MCP tools: `change_analyze`, `architecture_check`, `proof_inspect`,
+  `evidence_inspect`, `graph_query`.
+- Docs: `docs/2.0.1/` including FINAL_COMPLETION_AUDIT and updated limitations.
+
+### Changed
+
+- Package positioning: engineering assurance for AI coding agents; description
+  and keywords updated (`change-assurance`, `evidence`, `engineering-assurance`).
+- Action default `version` input and CI published-package pins → **2.0.1**.
+- `npm run verify` builds before tests so STDIO MCP suites use fresh `dist/`.
+- Firewall load path seeds DEFAULT_POLICY when no repo policy exists; force-push
+  is `require-approval` (not hard-block via baseline pack alone).
+- README / CONTRIBUTING / ROADMAP aligned to honest status labels.
+
+### Fixed
+
+- CodeQL high alerts: crypto usage, ReDoS hardening, temp-file handling, and
+  TOCTOU fixes across secrets scan, graph/health/tokens, team auth, and related
+  tests.
+- CI Typecheck / Lint / Test / Build: track plugin fixtures previously ignored
+  under `.agentdoctor/`, and normalize TypeScript AST source paths so Windows
+  runners match discovered files.
+- Language adapter barrel exports (`pythonAvailable` / `phpAvailable` /
+  `goAvailable`) kept consistent.
+
+### Security
+
+- CodeQL-driven hardening on path/temp and regex surfaces (see Fixed).
+- Central path safety helpers; secret severity≠confidence fields.
+- Change assurance / policy path remains evaluate-only by default
+  (`executionResult: "not-executed"`); no fake full browser SSO.
+
+### Known limitations (at release)
+
+- Test impact is heuristic without coverage; hybrid when coverage lacks a test
+  map.
+- Architecture C4 impact remains **inferred**; contract is repo-local only.
+- Proof `verified` / hash integrity ≠ engineering correctness or compliance.
+- Browser OAuth incomplete (EXPERIMENTAL); Postgres needs live URL (EXTERNAL);
+  Java/Kotlin/Rust/Dart/Go AST extractors EXTERNAL; IDE interception EXTERNAL.
+- Published npm Action pins require a human `npm publish` of 2.0.1 before remote
+  CI against `version: 2.0.1` succeeds.
+
+## [2.0.0] — 2026-09-21
+
+AgentDoctor 2.0 expands the product from Safety + Project Brain into **codebase
+intelligence** for developers, agents, and engineering teams — while preserving
+Safety CLI behavior and Brain MCP tool names.
+
+Canonical docs: [docs/2.0/](docs/2.0/README.md). Readiness:
+[docs/2.0/overview/readiness-matrix.md](docs/2.0/overview/readiness-matrix.md).
+Limitations: [docs/2.0/overview/known-limitations.md](docs/2.0/overview/known-limitations.md).
+
+### Added
+
+- Shared contracts layer (`CONTRACTS_VERSION`) unifying findings / graph /
+  knowledge / policy shapes.
+- Repository Brain productization: `init`, proposal artifacts, `brain review` /
+  `brain proposals` / product snapshots (proposals never auto-approved).
+- TypeScript/JavaScript AST intelligence graph (`graph`) with regex fallback.
+- Git engineering intelligence (`health`) with per-metric method disclosure.
+- C4-style architecture views (`c4`) labeled inferred/proposed.
+- Impact surfaces: `impact`, `test-impact`, `refactor-impact`.
+- Governed knowledge store with abstention (`knowledge`, `knowledge-create`,
+  `knowledge-approve`).
+- Policy packs + AgentDoctor-controlled enforcement runner (`enforce`) distinct
+  from evaluate-only firewall.
+- Combined MCP server (`agentdoctor mcp`) exposing Brain tools **plus**
+  intelligence tools without renaming `brain_*`.
+- Dashboard `/api/v2/*` endpoints (graph, health, c4, knowledge,
+  projects/workspaces stubs).
+- Local-dev team authentication (`team-register`, `team-login`) — not enterprise SSO.
+- Ops health via `doctor --json`.
+- Security hardening: MCP/dashboard path-safety, symlink skip in AST walk,
+  secret redaction on exports/API samples.
+- Documentation tree: `docs/2.0/` (overview, guides, reports, audits, release).
+- Additional 2.0 platform / Safety surfaces landed with this release train:
+  evaluate-only Action Policy Evaluator (`platform policy-check`, alias
+  `firewall-check`), session audit, provenance, context-security, architecture
+  drift, time-machine, token planner, readiness scorecard, multi-format reports,
+  Copilot / Windsurf / Gemini CLI / Aider adapters, Project Brain CLI
+  (`brain init|status|inspect|rebuild|history|search|export|import`),
+  `changes`, `context-health`, `secrets`, Safe Fix 2.0 backup/undo, named
+  baselines, monorepo `packages`, local `pr-review`, loopback `dashboard`,
+  `plugins`, optional `local-ai`.
+
+### Security
+
+- Path-traversal hardening for MCP `dependency_lookup` and dashboard hostile URLs.
+- Evaluate-only policy evaluation remains explicit (`executionResult: "not-executed"`).
+- `blocked-by-enforcement` only on the AgentDoctor-controlled runner block path.
+- Loopback dashboard default retained; non-loopback requires explicit opt-in.
+- Safe Fix target hardening: refuse symlink write-through, symlink ancestors,
+  directory targets, and non-allowlisted paths.
+
+### Compatibility
+
+- Safety `scan` / `fix` / `verify` workflows and exit codes preserved.
+- Brain MCP tool names preserved (`brain_overview`, …, `brain_snapshot`).
+- Additive CLI commands only; no intentional removal of 1.x public surfaces.
+- Platform evaluate-only firewall behavior preserved.
+
+### Known limitations (at release)
+
+- AST analysis is TypeScript/JavaScript-focused; other languages unsupported for
+  deep graph analysis.
+- Test-impact is heuristic/graph-based (no coverage-file oracle).
+- C4 views are inferred, not approved architecture truth.
+- No IDE interception of third-party agents.
+- Local-dev team auth is not SSO.
+- SQLite/Postgres/vector backends are not production-complete.
+- See README limitations and `docs/2.0/overview/known-limitations.md`.
+
+### Migration notes
+
+- Upgrading from 1.1.x: existing `.agentdoctor` Safety/Brain data remains valid.
+- New directories may appear under `.agentdoctor/repository-brain/`,
+  `.agentdoctor/knowledge/`, `.agentdoctor/team/`, `.agentdoctor/platform/`.
+- Treat `init` outputs as **proposed** until reviewed.
+- Prefer `agentdoctor mcp` for combined tools; `brain-mcp` remains for Brain-only clients.
+- Full guide: [docs/2.0/guides/migration.md](docs/2.0/guides/migration.md).
+
 ### Notes
 
-- Owner-only after this tree is green: `npm publish`, git tag `v1.1.0`, GitHub Release.
-  Do **not** auto-publish from CI agents.
+- Readiness matrix classifications remain honest; many 2.0 surfaces are
+  **implemented but partially validated**. No blanket 5/5 claims.
+- Multi-writer Safe Fix is still not fully atomic across targets after preflight.
+- Vitest 3 → 4/5 major upgrade remains deferred (dev-only moderate advisory).
+- Do **not** auto-publish from CI agents. Tag/publish require a separate human step.
+
+## [1.1.1] — 2026-09-20
+
+Patch release: Marketplace Action naming + dependency security pins. npm, git tag,
+GitHub Release, and Action default are aligned on **`1.1.1`**.
+
+### Changed
+
+- GitHub Action Marketplace display name is now `AgentDoctor Safety`.
+- npm overrides pin patched transitive versions: `js-yaml@4.3.2`, `fast-uri@3.1.8`,
+  `hono@4.13.8`, `qs@6.16.0`.
+- Fixture `fixtures/multi-agent-project` pins `next@15.5.24` (scan fixture only).
+- Action default `version` input and CI smoke pins use `1.1.1`.
+
+### Security
+
+- Clears known high/moderate advisories on transitive lint/MCP stack dependencies
+  without changing the Safety CLI public API.
+- Vitest / `@vitest/mocker` moderate advisory deferred (requires major upgrade).
+
+### Docs
+
+- [docs/archive/DEPENDENCY_SECURITY_AUDIT.md](docs/archive/DEPENDENCY_SECURITY_AUDIT.md)
+- [docs/archive/DEPENDABOT_PR_REVIEW.md](docs/archive/DEPENDABOT_PR_REVIEW.md)
+- [docs/release-notes/v1.1.1.md](docs/release-notes/v1.1.1.md)
 
 ## [1.1.0] — 2026-08-13
 
@@ -106,7 +353,7 @@ First production release: Scan → Fix → Verify → CI contract frozen for v1.
 
 ### Compatibility
 
-- CLI + JSON + rule ID contracts frozen for v1 (see [docs/compatibility.md](docs/compatibility.md))
+- CLI + JSON + rule ID contracts frozen for v1 (see [docs/reference/compatibility.md](docs/reference/compatibility.md))
 - Action `version` input default is `1.0.0` (bumped after npm published `@praneeth_54/agentdoctor@1.0.0`)
 
 ## [0.3.0-beta] — 2026-08-07
@@ -150,7 +397,7 @@ Minor beta: deterministic readiness scoring and CLI `--min-score` enforcement.
 
 - Deterministic readiness scoring (v1): `scan()` populates `scoringAvailable: true` and
   `scores` (`overall`, `categories`, `agents`) from post-dedupe findings
-  ([docs/scoring.md](docs/scoring.md))
+  ([docs/reference/scoring.md](docs/reference/scoring.md))
 - CLI `--min-score N` enforcement: exit code `1` when `scores.overall < N`
 - `--ci` without `--min-score` remains report-only (exit `0` on successful scan)
 - Scoring specification and compatibility / exit-code docs updated for shipped behavior
@@ -273,7 +520,11 @@ First public beta.
 - Not a complete secret scanner
 - Git “tracked secret” detection deferred
 
-[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/pranee54/AgentDoctor/compare/v2.0.1...v2.1.0
+[2.0.1]: https://github.com/pranee54/AgentDoctor/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/pranee54/AgentDoctor/compare/v1.1.1...v2.0.0
+[1.1.1]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.1
 [1.1.0]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pranee54/AgentDoctor/releases/tag/v1.0.0
 [0.3.0-beta]: https://github.com/pranee54/AgentDoctor/releases/tag/v0.3.0-beta

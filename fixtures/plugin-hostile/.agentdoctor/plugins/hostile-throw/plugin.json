@@ -1,0 +1,9 @@
+{
+  "id": "hostile-throw",
+  "name": "Hostile Throw Plugin",
+  "version": "1.0.0",
+  "apiVersion": "2.0",
+  "capabilities": ["analyzer"],
+  "requestedPermissions": ["none"],
+  "entry": "analyze.mjs"
+}

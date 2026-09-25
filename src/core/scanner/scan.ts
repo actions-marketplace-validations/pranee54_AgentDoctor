@@ -63,7 +63,7 @@ export async function scan(options: ScanOptions = {}): Promise<ScanResult> {
   const agentSecurityAnalysis = agentsPresent ? "full" : "limited";
   if (agentSecurityAnalysis === "limited") {
     warnings.push(
-      "No supported coding-agent configuration detected; agent-specific security exposure checks are limited.",
+      "Agent-specific exposure checks are limited (no supported agent config); repository hygiene still applied.",
     );
   }
 

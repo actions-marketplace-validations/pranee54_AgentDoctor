@@ -63,4 +63,30 @@ describe("terminal Next steps workflow", () => {
     expect(output).toContain("No findings");
     expect(output).not.toMatch(/\nNext\n/);
   });
+
+  it("prints agent Coverage summary for configured Safe Fix vs detect-only agents", async () => {
+    const root = await tempRepo();
+    await fs.writeFile(path.join(root, "package.json"), "{}\n");
+    await fs.writeFile(path.join(root, "AGENTS.md"), "demo\n");
+    await fs.mkdir(path.join(root, ".github"), { recursive: true });
+    await fs.writeFile(
+      path.join(root, ".github", "copilot-instructions.md"),
+      "# Copilot\n\nPrefer TypeScript.\n",
+    );
+
+    const output = renderTerminalReport(await scan({ cwd: root }));
+    expect(output).toMatch(/Coverage:/);
+    expect(output).toMatch(/Safe Fix:/);
+    expect(output).toMatch(/detect-only \(no Safe Fix writer\):/);
+    expect(output).toMatch(/GitHub Copilot/);
+  });
+
+  it("prints limited Coverage when no agent is configured", async () => {
+    const root = await tempRepo();
+    await fs.writeFile(path.join(root, "package.json"), "{}\n");
+
+    const output = renderTerminalReport(await scan({ cwd: root }));
+    expect(output).toMatch(/Coverage: 0 configured/);
+    expect(output).toMatch(/limited agent analysis/);
+  });
 });

@@ -1,4 +1,6 @@
-export const PACKAGE_VERSION = "1.1.0";
+import type { AgentId } from "./types/index.js";
+
+export const PACKAGE_VERSION = "2.1.0";
 
 export const DEFAULT_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MiB
 
@@ -34,8 +36,12 @@ export const DEFAULT_IGNORE_DIRECTORIES = new Set([
   ".pnpm-store",
 ]);
 
-export const AGENT_DISPLAY_NAMES: Record<"cursor" | "claude-code" | "codex", string> = {
+export const AGENT_DISPLAY_NAMES: Record<AgentId, string> = {
   cursor: "Cursor",
   "claude-code": "Claude Code",
   codex: "Codex",
+  copilot: "GitHub Copilot",
+  windsurf: "Windsurf",
+  "gemini-cli": "Gemini CLI",
+  aider: "Aider",
 };
