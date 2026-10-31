@@ -7,11 +7,143 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.3] — 2026-09-27
+
+Patch release on top of public **3.0.2**: Brain → Project Chat evidence bridge and
+real operation-based progress UX for `agentdoctor ask`.
+
+Public relationship:
+
+- **3.0.2** remains the immutable public discovery patch (`v3.0.2` → `8d41936`).
+- **3.0.3** packages the finalize work from `a586cdf` (Brain→Chat + ask progress).
+- Does **not** rewrite **3.0.0**, **3.0.1**, or **3.0.2** history.
+
+### Fixed
+
+- Deterministic `agentdoctor ask` / Project Chat now consumes searchable Project Brain claims/components as first-class **INFERRED** evidence (aligned with `brain search`).
+- Brain-derived source paths are ownership-gated before excerpts; Brain claims are never auto-upgraded to **VERIFIED**.
+- `.agentdoctor/**` control-plane paths cannot become **VERIFIED** application source evidence.
+- Architecture/module answers prioritize Brain + owned sources over generic minified graph noise.
+- Ownership, containment, HOME/broad-root, `.private`, nested-repo, symlink, and stale-brain protections remain enforced.
+
+### Added
+
+- `agentdoctor ask` progress UX driven by real pipeline stages (understand → search → retrieve → verify → prepare).
+- Progress writes to stderr (TTY spinner / non-TTY stable lines); answers and `--json` stay on stdout without contamination.
+- No artificial delays — spinner frames only animate while real work is in flight.
+
+### Tests
+
+- Added `tests/unit/agent/chat-brain-context.test.ts` for Brain → ask evidence, control-plane hostility, stale brain, and UNKNOWN.
+- Added `tests/unit/cli/ask-progress.test.ts` for TTY/non-TTY/JSON/error progress lifecycle.
+
+## [3.0.2] — 2026-09-27
+
+Patch release: fix current-directory project discovery for `agentdoctor start`.
+
+Public relationship:
+
+- **3.0.0** and **3.0.1** remain immutable public releases.
+- **3.0.2** is the public discovery patch (`v3.0.2` → `8d41936`). Brain→Chat and ask progress ship in **3.0.3**.
+
+### Fixed
+
+- `agentdoctor start` no longer reports `(none found)` for valid software trees that lack classic manifests (e.g. language-only roots without `package.json` / `.git`).
+- Discovery fallback now reuses the same deterministic `detectProject` engine as `dna`, so `start` and `dna` agree on the project root.
+- Clearer discovery UX (`✓ Project detected`) and empty-state guidance.
+- Reject empty trees that only report `unknown` language; do not silently absorb multi-project parents with 2+ child marker projects.
+- Ownership, containment, HOME/broad-root, `.private`, nested-repo, and symlink protections remain enforced.
+
+### Tests
+
+- Added `tests/unit/project/start-discovery.test.ts` regression coverage for markerless cwd, nested roots, multi-project parents, `.private`, and home refusal.
+
+## [3.0.1] — 2026-09-27
+
+Production-hardening follow-up on the reviewed freeze remediation commit
+`319810a`. This does **not** rewrite public **3.0.0** history.
+
+Public relationship:
+
+- **3.0.0** remains the original public npm/GitHub release (`v3.0.0` → `c21faf1`).
+- **3.0.1** packages the freeze remediation that landed after that public release.
+
+### Hardening included in 3.0.1
+
+- Ownership boundary **v4** (realpath symlink semantics; containment ≠ ownership)
+- CLI broad-root refusal (`resolveCliProjectRoot`) for intelligence surfaces
+- MCP path ownership + STDIO transport adversarial coverage
+- Deterministic local provider prompt-injection / tool-call E2E harness
+- what-if ownership gate (`.private` / foreign targets fail closed)
+- Brain / Twin / Graph stale-state stamps (`ownershipBoundaryVersion` / invalidation)
+- Dashboard what-if/whatif aliases, ask-only chat, hostile route matrices
+- CLI/dashboard certification inventories and hostile fixtures
+
+Documented limitations from the freeze audit remain (TTY chat REPL not fully
+automated; native Anthropic/Gemini not implemented; vendor LLMs EXTERNAL; knowledge
+docs shallow readdir completeness).
+
+## [3.0.0] — 2026-09-26
+
+Public release of the **AgentDoctor 3.0 local core**: project intelligence, doctors,
+student/agent workflows, MCP, dashboard, evidence/proof, and honest EXTERNAL
+boundaries. AI providers remain **opt-in**. Correctness is never claimed.
+
+> Historical note: npm `@praneeth_54/agentdoctor@3.0.0` and GitHub `v3.0.0` point to
+> commit `c21faf1`. Freeze remediation after that release is shipped as **3.0.1**.
+
+Limitations: [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+Release prep: [docs/FINAL_PRE_RELEASE_CHECK.md](docs/FINAL_PRE_RELEASE_CHECK.md).
+
+### Highlights
+
+- **Project intelligence** — discovery, DNA, Brain, software map, hybrid search,
+  dependency/lockfile analysis, architecture contracts, git/change impact.
+- **Project Chat** — deterministic `ask` / `chat` with truth labels
+  (`VERIFIED` | `INFERRED` | `UNKNOWN` | `EXTERNAL`); optional AI when configured.
+- **Coding agent** — plan → human approval → path-safe tools → verify; no
+  unrestricted shell; `ENGINEERING_CORRECTNESS_NOT_CLAIMED` preserved.
+- **Student workflows** — `learn`, viva, docs, Build With Me (explain → plan →
+  approve → apply → verify).
+- **Security & approval** — Security Doctor (static), secret redaction, forensic
+  read-only mode, MCP approval tokens + planHash (bare `approved:true` rejected).
+- **Evidence & verification** — change analysis, evidence bundles, change proof
+  (hash integrity; engineering correctness not claimed).
+- **MCP** — combined server with **38** tools (project, intelligence, agent,
+  assurance); path/workspace escape blocked.
+- **Dashboard** — embedded local UI + APIs (status, DNA, graph, search, security,
+  twin, what-if, forensic, chat).
+- **Digital Twin / What-If** — local refreshable twin snapshot; graph-derived
+  impact with uncertainty (not certainty).
+- **Doctors** — API, Database, Event, Security, Privacy, Incident, Deployment
+  (file/static evidence); live runtime / IdP / brokers remain **EXTERNAL**.
+- **Evaluation Lab** — fixture-driven eval including prompt-injection detect-only.
+- **Self-diagnosis** — product self-check surfaces.
+
+### Providers (local)
+
+- Implemented: `none` | `mock` | `openai-compatible` | `ollama`.
+- Native Anthropic / Gemini SDKs: **not implemented** (fail closed via `none`).
+
+### Limitations (not unfinished stubs)
+
+- Live cloud/DB/K8s/APM runtime intelligence: **EXTERNAL**.
+- Neural embeddings / enterprise IdP-SSO: **EXTERNAL**.
+- Full compiler-grade AST/call binding for every language: not claimed.
+- Not an OS sandbox / EDR; not a replacement for commercial SAST/SCA.
+- Proof asserts hash integrity — not absolute engineering correctness.
+
+### Docs / packaging
+
+- Rebuilt public README; public docs under `docs/`; audits in `docs/internal/`.
+- npm package contents: `dist`, `README.md`, `LICENSE`, `CHANGELOG.md`.
+- GitHub Action default package pin: **3.0.0**.
+
 ## [2.1.0] — 2026-09-23
 
 Optional Project AI Agent line on top of 2.0.1 assurance. AI remains **opt-in**.
-Canonical release notes: [docs/RELEASE_2_1_0.md](docs/RELEASE_2_1_0.md).
-Checklist: [docs/RELEASE_CHECKLIST_2_1_0.md](docs/RELEASE_CHECKLIST_2_1_0.md).
+Historical notes: [docs/internal/RELEASE_2_1_0.md](docs/internal/RELEASE_2_1_0.md).
+Checklist: [docs/internal/RELEASE_CHECKLIST_2_1_0.md](docs/internal/RELEASE_CHECKLIST_2_1_0.md).
 
 #### Project Intelligence
 
@@ -520,7 +652,11 @@ First public beta.
 - Not a complete secret scanner
 - Git “tracked secret” detection deferred
 
-[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/pranee54/AgentDoctor/compare/v3.0.3...HEAD
+[3.0.3]: https://github.com/pranee54/AgentDoctor/compare/v3.0.2...v3.0.3
+[3.0.2]: https://github.com/pranee54/AgentDoctor/compare/v3.0.1...v3.0.2
+[3.0.1]: https://github.com/pranee54/AgentDoctor/compare/v3.0.0...v3.0.1
+[3.0.0]: https://github.com/pranee54/AgentDoctor/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/pranee54/AgentDoctor/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/pranee54/AgentDoctor/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/pranee54/AgentDoctor/compare/v1.1.1...v2.0.0

@@ -1,15 +1,12 @@
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-import {
-  ChatService,
-  CHAT_PROVIDER_NONE_MESSAGE,
-  formatChatResponseForCli,
-} from "../../agent/chat/index.js";
+import { ChatService, formatChatResponseForCli } from "../../agent/chat/index.js";
 import { MockModelProvider, createModelProvider, loadAiConfig } from "../../ai/index.js";
 import { EXIT_CODES, type ExitCode } from "../../types/index.js";
-import { resolveRepoRoot } from "../../utils/path.js";
+import { resolveCliProjectRoot } from "../safe-root.js";
 import { colors } from "../../utils/colors.js";
+import { createAskProgress } from "../ask-progress.js";
 
 function printBanner(options: {
   root: string;
@@ -72,17 +69,36 @@ export async function runAskCommand(options: {
   json?: boolean;
   /** Test-only: force mock provider */
   useMock?: boolean;
+  /** Test override: force progress enabled/disabled */
+  progressEnabled?: boolean;
+  /** Test override: progress stream */
+  progressStream?: NodeJS.WritableStream;
+  /** Test override: treat progress stream as TTY */
+  progressIsTTY?: boolean;
 }): Promise<ExitCode> {
-  const root = resolveRepoRoot(options.root ?? process.cwd());
+  const gated = await resolveCliProjectRoot(options.root ?? process.cwd());
+  if (!gated.ok) {
+    console.error(`Error: ${gated.message}`);
+    return gated.code;
+  }
+  const root = gated.root;
   const provider = options.useMock ? new MockModelProvider() : createModelProvider(loadAiConfig());
+  const progressEnabled = options.progressEnabled ?? !options.json;
+  const progress = createAskProgress({
+    enabled: progressEnabled,
+    ...(options.progressStream ? { stream: options.progressStream } : {}),
+    ...(options.progressIsTTY !== undefined ? { isTTY: options.progressIsTTY } : {}),
+  });
   const chat = new ChatService({
     root,
     provider,
     persistAudit: !options.useMock,
+    progress,
   });
 
   try {
     const response = await chat.ask(options.question);
+    progress.stop();
     if (options.json) {
       process.stdout.write(`${JSON.stringify(response, null, 2)}\n`);
     } else {
@@ -93,7 +109,13 @@ export async function runAskCommand(options: {
       return EXIT_CODES.INTERNAL_ERROR;
     }
     return EXIT_CODES.SUCCESS;
+  } catch (error) {
+    progress.stop();
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`AgentDoctor error:\n${message}`);
+    return EXIT_CODES.INTERNAL_ERROR;
   } finally {
+    progress.stop();
     await chat.end();
   }
 }
@@ -104,7 +126,12 @@ export async function runChatCommand(options: {
   scriptedInputs?: string[];
   useMock?: boolean;
 }): Promise<ExitCode> {
-  const root = resolveRepoRoot(options.root ?? process.cwd());
+  const gated = await resolveCliProjectRoot(options.root ?? process.cwd());
+  if (!gated.ok) {
+    console.error(`Error: ${gated.message}`);
+    return gated.code;
+  }
+  const root = gated.root;
   const provider = options.useMock ? new MockModelProvider() : createModelProvider(loadAiConfig());
   const chat = new ChatService({
     root,
@@ -122,9 +149,9 @@ export async function runChatCommand(options: {
   });
 
   if (provider.id === "none" && !options.useMock) {
-    process.stdout.write(`${CHAT_PROVIDER_NONE_MESSAGE}\n`);
-    await chat.end();
-    return EXIT_CODES.USAGE_ERROR;
+    process.stdout.write(
+      "Deterministic project chat (no LLM). Architecture, auth, and dependency questions use local analyzers.\n\n",
+    );
   }
 
   const scripted = options.scriptedInputs ? [...options.scriptedInputs] : undefined;

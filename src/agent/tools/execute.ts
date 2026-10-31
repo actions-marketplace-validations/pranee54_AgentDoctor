@@ -13,6 +13,7 @@ import {
 import { scan } from "../../core/scanner/scan.js";
 import { analyzeChanges } from "../../core/changes/analyze.js";
 import { discoverFiles } from "../../discovery/files.js";
+import { assertProjectOwnedRepoPath, ProjectOwnershipError } from "../../project/ownership.js";
 import { PathEscapeError, resolveSafeRepoPath } from "../../security/paths.js";
 import { resolveRepoRoot } from "../../utils/path.js";
 import { redactSecrets } from "../../platform/security/redact.js";
@@ -24,6 +25,7 @@ import { inferTestArgv, runAgentCommand } from "./run.js";
 import { evaluateApproval } from "../approvals.js";
 import { modeBlocksToolCategory, type AgentMode } from "../modes.js";
 import { assertWorkspacePathAccess, type WorkspaceModel } from "../../workspace/index.js";
+import { assertForensicReadOnly } from "../../product/forensic/mode.js";
 
 function asRecord(args: Record<string, unknown>): Record<string, unknown> {
   return args;
@@ -32,6 +34,33 @@ function asRecord(args: Record<string, unknown>): Record<string, unknown> {
 function str(args: Record<string, unknown>, key: string): string | null {
   const v = args[key];
   return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
+type OwnedPathOk = { ok: true; abs: string };
+type OwnedPathErr = { ok: false; code: string; message: string };
+
+async function resolveOwnedAgentPath(
+  root: string,
+  rel: string,
+): Promise<OwnedPathOk | OwnedPathErr> {
+  let abs: string;
+  try {
+    abs = resolveSafeRepoPath(root, rel);
+  } catch (error) {
+    if (error instanceof PathEscapeError) {
+      return { ok: false, code: "path_escape", message: "path escapes repository root" };
+    }
+    throw error;
+  }
+  try {
+    await assertProjectOwnedRepoPath(root, abs, rel);
+  } catch (error) {
+    if (error instanceof ProjectOwnershipError) {
+      return { ok: false, code: "ownership_denied", message: error.message };
+    }
+    throw error;
+  }
+  return { ok: true, abs };
 }
 
 /**
@@ -50,6 +79,8 @@ export async function executeAgentTool(
     mode?: AgentMode;
     /** Optional multi-root workspace isolation context */
     workspace?: WorkspaceModel | null;
+    /** Forensic mode — refuse all mutations */
+    forensicMode?: boolean;
   },
 ): Promise<AgentToolResult> {
   const started = Date.now();
@@ -78,6 +109,17 @@ export async function executeAgentTool(
 
   if (!spec) return fail("unknown_tool", `Unknown tool: ${call.name}`);
 
+  const forensic = options?.forensicMode === true || process.env.AGENTDOCTOR_FORENSIC_MODE === "1";
+  if (forensic && (spec.category === "write" || spec.category === "execute")) {
+    try {
+      assertForensicReadOnly(true);
+    } catch (error) {
+      return fail(
+        "forensic_read_only",
+        error instanceof Error ? error.message : "Forensic mode refuses write operations",
+      );
+    }
+  }
   if (modeBlocksToolCategory(options?.mode, spec.category)) {
     return fail(
       "mode_forbidden",
@@ -123,15 +165,9 @@ export async function executeAgentTool(
       case "read_file": {
         const rel = str(call.arguments, "path");
         if (!rel) return fail("invalid_argument", "path required");
-        let abs: string;
-        try {
-          abs = resolveSafeRepoPath(root, rel);
-        } catch (error) {
-          if (error instanceof PathEscapeError) {
-            return fail("path_escape", "path escapes repository root");
-          }
-          throw error;
-        }
+        const owned = await resolveOwnedAgentPath(root, rel);
+        if (!owned.ok) return fail(owned.code, owned.message);
+        const abs = owned.abs;
         const denied = ensureWorkspace(abs);
         if (denied) return denied;
         const maxBytes =
@@ -238,32 +274,18 @@ export async function executeAgentTool(
         const rel = str(call.arguments, "path");
         const content = typeof call.arguments.content === "string" ? call.arguments.content : null;
         if (!rel || content === null) return fail("invalid_argument", "path and content required");
-        let absCreate: string;
-        try {
-          absCreate = resolveSafeRepoPath(root, rel);
-        } catch (error) {
-          if (error instanceof PathEscapeError) {
-            return fail("path_escape", "path escapes repository root");
-          }
-          throw error;
-        }
-        const denyCreate = ensureWorkspace(absCreate);
+        const ownedCreate = await resolveOwnedAgentPath(root, rel);
+        if (!ownedCreate.ok) return fail(ownedCreate.code, ownedCreate.message);
+        const denyCreate = ensureWorkspace(ownedCreate.abs);
         if (denyCreate) return denyCreate;
         return ok(await createFileSafe(root, rel, content));
       }
       case "edit_file": {
         const rel = str(call.arguments, "path");
         if (!rel) return fail("invalid_argument", "path required");
-        let absEdit: string;
-        try {
-          absEdit = resolveSafeRepoPath(root, rel);
-        } catch (error) {
-          if (error instanceof PathEscapeError) {
-            return fail("path_escape", "path escapes repository root");
-          }
-          throw error;
-        }
-        const denyEdit = ensureWorkspace(absEdit);
+        const ownedEdit = await resolveOwnedAgentPath(root, rel);
+        if (!ownedEdit.ok) return fail(ownedEdit.code, ownedEdit.message);
+        const denyEdit = ensureWorkspace(ownedEdit.abs);
         if (denyEdit) return denyEdit;
         const editOpts: {
           content?: string;
@@ -288,16 +310,9 @@ export async function executeAgentTool(
       case "delete_file": {
         const rel = str(call.arguments, "path");
         if (!rel) return fail("invalid_argument", "path required");
-        let absDel: string;
-        try {
-          absDel = resolveSafeRepoPath(root, rel);
-        } catch (error) {
-          if (error instanceof PathEscapeError) {
-            return fail("path_escape", "path escapes repository root");
-          }
-          throw error;
-        }
-        const denyDel = ensureWorkspace(absDel);
+        const ownedDel = await resolveOwnedAgentPath(root, rel);
+        if (!ownedDel.ok) return fail(ownedDel.code, ownedDel.message);
+        const denyDel = ensureWorkspace(ownedDel.abs);
         if (denyDel) return denyDel;
         return ok(await deleteFileSafe(root, rel));
       }

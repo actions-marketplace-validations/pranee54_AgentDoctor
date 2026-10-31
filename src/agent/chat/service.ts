@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 
 import {
-  AI_PROVIDER_REQUIRED_MESSAGE,
   createModelProvider,
   loadAiConfig,
   publicAiConfig,
@@ -27,6 +26,8 @@ import {
 } from "./project-summary.js";
 import { buildChatTurnResponse, formatChatResponseForCli } from "./response.js";
 import type { ChatServiceOptions, ChatTurnResponse } from "./types.js";
+import { answerDeterministicProjectQuestion } from "./deterministic.js";
+import { noopAskProgress, type AskProgressReporter } from "../progress.js";
 
 export const CHAT_PROVIDER_NONE_MESSAGE = `AI chat is not configured.
 
@@ -50,6 +51,7 @@ export class ChatService {
   private readonly budgetTokens: number;
   private readonly persistAudit: boolean;
   private readonly systemPrompt: string;
+  private readonly progress: AskProgressReporter;
   private auditSession: AgentSession | undefined;
   private graphCache: CachedGraph | undefined;
   private lastContext: ContextBundle | undefined;
@@ -60,6 +62,7 @@ export class ChatService {
     this.provider = options.provider ?? createModelProvider(loadAiConfig());
     this.budgetTokens = options.budgetTokens ?? 6_000;
     this.persistAudit = options.persistAudit !== false;
+    this.progress = options.progress ?? noopAskProgress;
     this.systemPrompt = options.systemPromptAddon
       ? `${PROJECT_CHAT_SYSTEM_PROMPT}\n\n${options.systemPromptAddon}`
       : PROJECT_CHAT_SYSTEM_PROMPT;
@@ -129,40 +132,46 @@ export class ChatService {
     });
 
     if (this.provider.id === "none") {
-      const response: ChatTurnResponse = {
+      const response = await answerDeterministicProjectQuestion({
+        root: this.root,
+        question: safeUser,
         sessionId: this.sessionId,
-        message: CHAT_PROVIDER_NONE_MESSAGE,
-        truthClaims: [],
-        citations: [],
-        provider: "none",
-        model: "none",
-        status: "provider-none",
-        error: AI_PROVIDER_REQUIRED_MESSAGE,
-        contextPaths: [],
-        contextTruncated: false,
-        limitations: [],
-      };
-      await this.audit("error", "CHAT_FAILED", { reason: "provider-none" });
+        progress: this.progress,
+      });
+      this.lastContext = undefined;
+      this.memory.addAssistant(response.message, response.contextPaths);
+      await this.audit("prompt", "CHAT_DETERMINISTIC", { status: response.status });
       return response;
     }
 
+    this.progress.stage("understand", "start");
     const query = this.memory.resolveQuery(safeUser);
-    const context = await retrieveProjectContext({
-      root: this.root,
-      query,
-      budgetTokens: this.budgetTokens,
-      includePaths: [
-        ...this.memory.getReferencedPaths().slice(-8),
-        ...this.memory.getLastContextPaths().slice(-8),
-      ],
-      ...(this.graphCache ? { graph: this.graphCache } : {}),
-    });
+    this.progress.stage("understand", "ok");
+
+    let context: ContextBundle;
+    try {
+      context = await retrieveProjectContext({
+        root: this.root,
+        query,
+        budgetTokens: this.budgetTokens,
+        includePaths: [
+          ...this.memory.getReferencedPaths().slice(-8),
+          ...this.memory.getLastContextPaths().slice(-8),
+        ],
+        ...(this.graphCache ? { graph: this.graphCache } : {}),
+        progress: this.progress,
+      });
+    } catch (error) {
+      this.progress.stop();
+      throw error;
+    }
     this.lastContext = context;
     await this.audit("file-read", "CHAT_CONTEXT_RETRIEVED", {
       citations: String(context.citations.length),
       tokens: String(context.estimatedTokens),
     });
 
+    this.progress.stage("prepare", "start");
     const history = this.memory.historyForModel().slice(0, -1); // exclude current user (added separately)
     const messages = [
       { role: "system" as const, content: this.systemPrompt },
@@ -183,6 +192,7 @@ export class ChatService {
     });
 
     if (modelResult.error) {
+      this.progress.stage("prepare", "fail", sanitizeProviderError(modelResult.error));
       const response = buildChatTurnResponse({
         sessionId: this.sessionId,
         modelText: `AgentDoctor could not reach the configured AI provider.\n\nProvider: ${modelResult.provider}\nModel: ${modelResult.model}\nError: ${sanitizeProviderError(modelResult.error)}`,
@@ -200,6 +210,7 @@ export class ChatService {
       return response;
     }
 
+    this.progress.stage("prepare", "ok");
     const text = redactForModel(modelResult.message.content || "");
     const response = buildChatTurnResponse({
       sessionId: this.sessionId,

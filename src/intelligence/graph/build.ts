@@ -1,8 +1,8 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import ts from "typescript";
 
+import { discoverFiles } from "../../discovery/files.js";
 import { resolveRepoRoot, toPosixRelative } from "../../utils/path.js";
 import type { GraphEdge, GraphNode, RepositoryGraph } from "../../platform/types.js";
 import { buildRepositoryGraph } from "../../platform/graph/build.js";
@@ -12,6 +12,7 @@ import {
   resolveImportSpecifier,
   type ImportConfidence,
 } from "../resolve/imports.js";
+import { enrichGraphWithLanguageAdapters } from "../../product/graph/enrich-languages.js";
 
 function evidenceForConfidence(confidence: ImportConfidence): "verified" | "inferred" | "unknown" {
   if (confidence === "EXACT") return "verified";
@@ -25,32 +26,46 @@ export function nodeId(kind: string, key: string): string {
   return `${kind}:${createHash("sha1").update(key).digest("hex").slice(0, 12)}`;
 }
 
-export async function listTsFiles(root: string, limit = 400): Promise<string[]> {
-  const out: string[] = [];
-  const skip = new Set(["node_modules", ".git", "dist", "coverage", ".agentdoctor", "vendor"]);
-  async function walk(dir: string): Promise<void> {
-    if (out.length >= limit) return;
-    let entries;
-    try {
-      entries = await fs.readdir(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const e of entries) {
-      if (skip.has(e.name)) continue;
-      const abs = path.join(dir, e.name);
-      if (e.isSymbolicLink()) continue;
-      if (e.isDirectory()) {
-        await walk(abs);
-        continue;
-      }
-      if (/\.(ts|tsx|mts|cts)$/i.test(e.name) && !e.name.endsWith(".d.ts")) {
-        out.push(abs);
-      }
-    }
+async function applyLanguageEnrichment<
+  T extends RepositoryGraph & { builder: GraphBuilderMode; astFilesParsed: number },
+>(graph: T, root: string): Promise<T> {
+  try {
+    const { graph: enriched, stats } = await enrichGraphWithLanguageAdapters(graph, root);
+    const extra =
+      stats.filesParsed > 0
+        ? [
+            `Language adapters enriched graph (+${stats.nodesAdded} nodes, +${stats.edgesAdded} edges, ${stats.filesParsed} files parsed)`,
+          ]
+        : stats.filesAttempted > 0
+          ? ["Language adapter enrichment: no supported parses in sampled .py/.php/.go files"]
+          : [];
+    return {
+      ...enriched,
+      builder: graph.builder,
+      astFilesParsed: graph.astFilesParsed,
+      limitations: [...enriched.limitations, ...extra],
+    } as T;
+  } catch (error) {
+    return {
+      ...graph,
+      limitations: [
+        ...graph.limitations,
+        `Language adapter enrichment failed (${error instanceof Error ? error.message : String(error)})`,
+      ],
+    } as T;
   }
-  await walk(root);
-  return out.sort();
+}
+
+export async function listTsFiles(root: string, limit = 400): Promise<string[]> {
+  const discovered = await discoverFiles({ root });
+  return discovered.files
+    .filter((f) => {
+      const name = path.basename(f.relativePath);
+      return /\.(ts|tsx|mts|cts)$/i.test(name) && !name.endsWith(".d.ts");
+    })
+    .map((f) => f.absolutePath)
+    .sort()
+    .slice(0, limit);
 }
 
 /**
@@ -65,22 +80,25 @@ export async function buildIntelligenceGraph(options: {
   const mode = options.mode ?? "auto";
   if (mode === "regex") {
     const g = await buildRepositoryGraph(root);
-    return { ...g, builder: "regex", astFilesParsed: 0 };
+    return applyLanguageEnrichment({ ...g, builder: "regex", astFilesParsed: 0 }, root);
   }
 
   try {
     const files = await listTsFiles(root);
     if (files.length === 0) {
       const g = await buildRepositoryGraph(root);
-      return {
-        ...g,
-        builder: "regex",
-        astFilesParsed: 0,
-        limitations: [
-          ...g.limitations,
-          "No TypeScript sources found for AST builder; used regex fallback",
-        ],
-      };
+      return applyLanguageEnrichment(
+        {
+          ...g,
+          builder: "regex",
+          astFilesParsed: 0,
+          limitations: [
+            ...g.limitations,
+            "No TypeScript sources found for AST builder; used regex fallback",
+          ],
+        },
+        root,
+      );
     }
 
     const program = ts.createProgram({
@@ -248,31 +266,37 @@ export async function buildIntelligenceGraph(options: {
     nodes.sort((a, b) => a.id.localeCompare(b.id));
     edges.sort((a, b) => a.id.localeCompare(b.id));
 
-    return {
+    return applyLanguageEnrichment(
+      {
+        root,
+        generatedAt: new Date().toISOString(),
+        nodes,
+        edges,
+        builder: "typescript-ast",
+        astFilesParsed: files.length,
+        limitations: [
+          "TypeScript AST builder uses the TypeScript compiler API for .ts/.tsx only",
+          "Cross-file call resolution is identifier-based (not full type-checker binding)",
+          "Import edges use EXACT|RESOLVED|INFERRED confidence; UNRESOLVED never invents file targets",
+          "Additional .py/.php/.go nodes may be merged via language adapters when supported",
+          `analysisVersion=${CONTRACTS_VERSION}`,
+        ],
+      },
       root,
-      generatedAt: new Date().toISOString(),
-      nodes,
-      edges,
-      builder: "typescript-ast",
-      astFilesParsed: files.length,
-      limitations: [
-        "TypeScript AST builder uses the TypeScript compiler API for .ts/.tsx only",
-        "Cross-file call resolution is identifier-based (not full type-checker binding)",
-        "Import edges use EXACT|RESOLVED|INFERRED confidence; UNRESOLVED never invents file targets",
-        "Non-TypeScript languages fall back to regex graph when requested via auto+empty TS set",
-        `analysisVersion=${CONTRACTS_VERSION}`,
-      ],
-    };
+    );
   } catch (error) {
     const g = await buildRepositoryGraph(root);
-    return {
-      ...g,
-      builder: "regex",
-      astFilesParsed: 0,
-      limitations: [
-        ...g.limitations,
-        `TypeScript AST builder failed; regex fallback used (${error instanceof Error ? error.message : String(error)})`,
-      ],
-    };
+    return applyLanguageEnrichment(
+      {
+        ...g,
+        builder: "regex",
+        astFilesParsed: 0,
+        limitations: [
+          ...g.limitations,
+          `TypeScript AST builder failed; regex fallback used (${error instanceof Error ? error.message : String(error)})`,
+        ],
+      },
+      root,
+    );
   }
 }

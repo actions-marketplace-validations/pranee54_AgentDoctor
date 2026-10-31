@@ -1,6 +1,7 @@
 import { approvePlan, buildAgentPlan, formatAgentPlan } from "../../agent/plan.js";
 import { evaluateApproval, formatApprovalPrompt } from "../../agent/approvals.js";
 import { runCodingLoop } from "../../agent/loop.js";
+import { runRoleAgent, type AgentRole } from "../../agent/roles.js";
 import {
   executeAgentTool,
   getToolSpec,
@@ -9,7 +10,7 @@ import {
 } from "../../agent/tools/index.js";
 import type { AgentToolName } from "../../agent/tools/types.js";
 import { EXIT_CODES, type ExitCode } from "../../types/index.js";
-import { resolveRepoRoot } from "../../utils/path.js";
+import { resolveCliProjectRoot } from "../safe-root.js";
 import { colors } from "../../utils/colors.js";
 
 /**
@@ -21,7 +22,12 @@ export async function runPlanCommand(options: {
   json?: boolean;
   approve?: boolean;
 }): Promise<ExitCode> {
-  const root = resolveRepoRoot(options.root ?? process.cwd());
+  const gated = await resolveCliProjectRoot(options.root ?? process.cwd());
+  if (!gated.ok) {
+    console.error(`Error: ${gated.message}`);
+    return gated.code;
+  }
+  const root = gated.root;
   const plan = await buildAgentPlan({ root, goal: options.goal });
 
   if (options.approve) {
@@ -63,8 +69,14 @@ export async function runAgentCommand(options: {
   applyOpsJson?: string;
   verify?: boolean;
   runTests?: boolean;
+  role?: AgentRole;
 }): Promise<ExitCode> {
-  const root = resolveRepoRoot(options.root ?? process.cwd());
+  const gated = await resolveCliProjectRoot(options.root ?? process.cwd());
+  if (!gated.ok) {
+    console.error(`Error: ${gated.message}`);
+    return gated.code;
+  }
+  const root = gated.root;
   const approvedByHuman = options.approve === true;
 
   if (options.listTools) {
@@ -144,14 +156,24 @@ export async function runAgentCommand(options: {
         return EXIT_CODES.USAGE_ERROR;
       }
     }
-    const result = await runCodingLoop({
-      root,
-      goal: options.goal,
-      approvedByHuman: true,
-      ...(toolCalls ? { toolCalls } : {}),
-      verify: options.verify !== false,
-      runTests: options.runTests === true,
-    });
+    const result = options.role
+      ? await runRoleAgent({
+          role: options.role,
+          root,
+          goal: options.goal,
+          approvedByHuman: true,
+          ...(toolCalls ? { toolCalls } : {}),
+          verify: options.verify !== false,
+          runTests: options.runTests === true,
+        })
+      : await runCodingLoop({
+          root,
+          goal: options.goal,
+          approvedByHuman: true,
+          ...(toolCalls ? { toolCalls } : {}),
+          verify: options.verify !== false,
+          runTests: options.runTests === true,
+        });
     if (options.json) {
       process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     } else {
